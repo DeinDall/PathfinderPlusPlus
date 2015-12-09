@@ -28,9 +28,10 @@ public:
 
 	void update();
 
-	// draw(window): Cette methode dessine la map dans la fenetre. Inoptimisée
+	// draw(window): Cette methode dessine le sol de la map dans la fenêtre.
 	void draw(sf::RenderWindow& window);
 
+	// drawWallLayer(window, yLayer): Cette methode dessine une rangée de murs dans la fenêtre
 	void drawWallLayer(sf::RenderWindow& window, int yLayer);
 
 	void save(std::wstring file);

@@ -24,8 +24,9 @@ SOURCES += \
     src/mousedrawer.cpp \
     src/interface/button.cpp \
     src/interface/buttons.cpp \
-    src/interface/console.cpp \
-    src/interface/pathinfo.cpp
+    src/interface/pathinfo.cpp \
+    src/flag.cpp \
+    src/interface/console.cpp
 
 HEADERS += \
     src/map.h \
@@ -37,4 +38,5 @@ HEADERS += \
     src/interface/buttons.h \
     src/mousedrawer.h \
     src/interface/stk_fileopenwrapper.h \
-    src/interface/pathinfo.h
+    src/interface/pathinfo.h \
+    src/flag.h

@@ -30,13 +30,10 @@ void Console::update() {
 	std::vector<std::list<ConsoleLine*>::iterator> toDelete;
 
 	for (auto it = mLines.begin(); it != mLines.end(); ++it) {
-		if (mLines.empty()) // Ceci est là pour empècher le crash.
-			break;
-
 		ConsoleLine* line = *it;
+
 		if (line->y < i*CONSOLE_LINE_HEIGHT)
 			line->y -= ((line->y - i*CONSOLE_LINE_HEIGHT)/8)-1;
-		++i;
 
 		line->timeout--;
 
@@ -48,6 +45,8 @@ void Console::update() {
 				line->text.setColor(sf::Color(255, 0, 0, (line->timeout/40.f)*255));
 			line->text.setPosition(sf::Vector2f(8, 8+line->y));
 		}
+
+		++i;
 	}
 
 	for (auto it : toDelete)

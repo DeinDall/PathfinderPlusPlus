@@ -7,7 +7,6 @@ Pathfinder::Pathfinder() {
 
 void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	mOrigin = sf::Vector2i(fromX, fromY);
-	mCheckedCases = 0;
 
 	mStepCountMap.resize(map.width()*map.height());
 	for (int& i : mStepCountMap)
@@ -17,6 +16,7 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	std::vector<Node> nodes;
 	nodes.resize(map.width()*map.height());
 
+	// on initialise les cases.
 	for (int ix=0; ix<map.width(); ++ix) {
 		for (int iy=0; iy<map.height(); ++iy) {
 			Node& node = nodes[positionToArrayIndex(ix, iy, map.width())];
@@ -39,9 +39,6 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	while (!remainingNodes.empty()) {
 		Node* n1 = nullptr;
 
-		// Ceci n'est pas part de l'algorithme, mais sert a suivre son fonctionnement
-		mCheckedCases++;
-
 		// On cherche le noeud ayant le chemin le plus court depuis le début
 		for (Node* node : remainingNodes) {
 			if (n1==nullptr)
@@ -50,6 +47,7 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 				n1 = node;
 		}
 
+		// Ceci n'est pas part de l'algorithme, mais sert a suivre son fonctionnement
 		mStepCountMap[positionToArrayIndex(n1->x, n1->y, map.width())] = n1->stepCount;
 
 		// Si on tombe sur la fin, on a le chemin le plus court vers la fin.
@@ -64,14 +62,15 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 			int n2x = n1->x + dir.xOffset, n2y = n1->y+dir.yOffset;
 
 			if (dir==n1->previousDirection.opposite())
-				continue; // inutile, c'est la d'où on viens
+				continue; // inutile, c'est la d'où on viens.
 			else if (n2x<0 || n2x>=map.width() || n2y<0 || n2y>=map.height())
-				continue; // inutile, c'est hors de la map
+				continue; // inutile, c'est hors de la map.
 			else if (map.get(n2x, n2y) != 0)
-				continue; // inutile, c'est un bloc solide
+				continue; // inutile, c'est un mur.
 
 			Node& n2 = nodes[positionToArrayIndex(n2x, n2y, map.width())];
 
+			// Si jamais le chemin actuel pour cette case est plus court que le chemin que l'on connaissait déjà.
 			if ((n2.stepCount==-1) || (n2.stepCount > n1->stepCount+1) ) {
 				n2.stepCount = n1->stepCount+1;
 				n2.previousDirection = dir;
@@ -85,6 +84,7 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	Node* n = &end;
 
 	if (!n->previousDirection.isValid()) {
+		// On a pas trouvé la fin, ça signifie que la fin est inaccessible.
 		mPath.clear();
 		return;
 	}
@@ -118,20 +118,28 @@ void Pathfinder::computePathGraphics() {
 }
 
 void Pathfinder::draw(sf::RenderWindow& window, bool doStepCountMap) {
-	glLineWidth(4.f);
-	window.draw(mPathGraphics);
-	glLineWidth(1.f);
+	if (!mPath.empty()) {
+		// je vous présente un petit hack de la SFML au travers de OpenGL.
+		glLineWidth(4.f);
+		window.draw(mPathGraphics);
+		glLineWidth(1.f);
+	}
 
-	if (doStepCountMap) {
+	// Ici on dessine les cases visitées dans une couleure dépendante de leur distance en pas de l'origine
+	if (doStepCountMap && !mStepCountMap.empty()) {
 		sf::RectangleShape rect(sf::Vector2f(6, 6));
 
+		// On parcours la carte des nombres de pas
 		for (int i=0; i<mStepCountMap.size(); ++i) {
 			if (mStepCountMap[i]==-1)
-				continue;
+				continue; // on affiche pas les cases non visitées
 			int x = i%mMapWidth, y = i/mMapWidth;
 
+			// Ceci est un dégradé Bleu/Cyan -> Rouge/Orange
 			rect.setFillColor(sf::Color((mStepCountMap[i]/(float)mPath.size())*255, 64,
 										255-(mStepCountMap[i]/(float)mPath.size())*255));
+
+			// On dessine à la position voulue
 			rect.setPosition(x*32+13, y*32+13);
 			window.draw(rect);
 		}
@@ -143,7 +151,11 @@ std::vector<Direction>& Pathfinder::path() {
 }
 
 int Pathfinder::checkedCases() {
-	return mCheckedCases;
+	int count = 0;
+	for (int i=0; i<mStepCountMap.size(); ++i)
+		if (mStepCountMap[i]!=-1)
+			count++;
+	return count;
 }
 
 bool Pathfinder::tilesAreConnected(int x1, int y1, int x2, int y2) {

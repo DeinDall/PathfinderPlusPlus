@@ -10,10 +10,12 @@
 #include "interface/buttons.h"
 #include "interface/pathinfo.h"
 
+#include "flag.h"
+
 #include <iostream>
 
 int main(int, char**) {
-	// La carte, qui contient tous les bloc sous forme booléene.
+	// La carte, qui contient tous les blocs sous forme booléene.
 	Map map(24, 18);
 
 	sf::RenderWindow window(sf::VideoMode(1024, 576), "Pathfinder", sf::Style::Close);
@@ -32,6 +34,8 @@ int main(int, char**) {
 
 	// Les positions de début et de fin de recherche.
 	sf::Vector2i startPos(6, 4), endPos(map.width()-7, map.height()-5);
+
+	Flag startFlag("poteauo.png"), endFlag("poteauv.png");
 
 	// L'instance de la classe Buttons, s'occupe des boutons.
 	Buttons buttons(sf::Vector2u(guiViewRect.left, guiViewRect.top), guiViewRect.width);
@@ -106,9 +110,11 @@ int main(int, char**) {
 			}
 		}
 
+		// Ici on met à jour les éléments interractifs
 		buttons.update(sf::Mouse::getPosition(window));
 		drawer.update(sf::Mouse::getPosition(window), map);
 
+		// Ici on parcours les évènements envoyés par les boutons
 		while (buttons.popClick(buttonEv)) {
 			std::wstring fname;
 			switch (buttonEv) {
@@ -199,12 +205,15 @@ int main(int, char**) {
 		console.update();
 		map.update();
 
+		startFlag.update();
+		endFlag.update();
+
 		// Le dessin commence ici.
 		window.clear();
 
 		map.draw(window);
 
-		{ // C'est ici que
+		{ // C'est ici que l'on dessine les éléments par lignes
 			sf::RectangleShape rect(sf::Vector2f(28, 28));
 
 			for (int i=0; i<map.height(); ++i) {
@@ -214,17 +223,22 @@ int main(int, char**) {
 					rect.setPosition(startPos.x*32+2, startPos.y*32+2);
 					rect.setFillColor(sf::Color(255, 128, 64, 255));
 					window.draw(rect);
+
+					startFlag.setPosition(sf::Vector2f(startPos.x*32, startPos.y*32-10));
+					startFlag.draw(window);
 				}
 				if (endPos.y == i) {
 					rect.setPosition(endPos.x*32+2, endPos.y*32+2);
 					rect.setFillColor(sf::Color(64, 255, 128, 255));
 					window.draw(rect);
+
+					endFlag.setPosition(sf::Vector2f(endPos.x*32, endPos.y*32-10));
+					endFlag.draw(window);
 				}
 			}
 		}
 
-		if (!pathfinder.path().empty())
-			pathfinder.draw(window, showAdvancedPath);
+		pathfinder.draw(window, showAdvancedPath);
 
 		buttons.draw(window);
 		pathInfo.draw(window);
