@@ -1,0 +1,70 @@
+ORIGINAL PATHFINDER CHANGELOG:
+
+06 mai 2015
+v2 - Ajout d'un texte informant du temps de calcul du chemin.
+v2 - Dijkstra est remplacé par A*, en utilisant la distance de manhattan comme fonction heuristique.
+v2 - Début de l'implémentation de la sauvegarde et du chargement d'environnement.
+
+07 mai 2015
+v3 - Le texte d'information est maintenant animé et s'entasse avec les précédents.
+v3 - Le chemin est maintenant représenté par un trait et non un marqueur fluo.
+v3 - La map est dessinée en profondeur (vu en plongée), pas encore animé.
+v3 - [Code] main.cpp moins brouillon (déplacement de certains codes vers classes).
+
+21 mai 2015
+v4 - [FIX] Correction de crash dû à la console.
+v4 - [FIX] A* est maintenant VRAIMENT implémenté.
+v4 - Ajout de l'interface graphique (boutons & texte informatif).
+v4 - Implémentation finale de la sauvegarde et de l'ouverture vers les fichiers.
+v4 - Possibilité de vider la carte (Bouton "Remettre à zéro").
+v4 - Boîtes de dialogues natives pour Ouvrir, Sauvegarder et Vider (cf. interface/stk_fileopenwrapper.cpp).
+v4 - Possibilité de modifier la position de départ en plus de celle d'arivée.
+v4 - Possibilité de rafraichir le chemin (dans le cas ou la carte ai changé).
+v4 - Augmentation de la taille de trait représentant le chemin (plus visible).
+v4 - Ajout d'animations lors du changement d'état des cases.
+v4 - Chagement des contrôles: Click gauche pour poser un mur, Click droit pour effacer un mur.
+v4 - Augmentation de la simplicité de dessin (curseur visible, dessin avec click continu).
+v4 - Bouton "Afficher le poids des cases", Permettant de voir quelles cases ont été vérifiées et le poids qui leurs ont été attribués.
+
+25 mai 2015
+v5 - Ajout de drapeaux. Les gens aiment bien.
+v5 - Ajout d'un tas de commentaires dans le code.
+v5 - Pathfinder::checkedCases() calcule maintenant le nombre de cases sur demande (au lieu de compter).
+
+PATHFINDER++ CHANGELOG:
+
+08 dec 2015
+0.06 - [General] Switched from qmake to CMake (easier to compile on other machines).
+0.06 - [General] Dropped "stk_fileopenwrapper", now using util/dialogs based on the "tiny file dialogs" lib.
+0.06 - [General] (Finally) moved all class method implementations to cpp files : compilation is way shorter.
+0.06 - [General] Started adding const identifiers here and there. Those were clearly missing.
+0.06 - [Pathfinder] Separated computePath(...) into multiple parts, allowing step-by-step execution of the algorithm.
+0.06 - [Pathfinder] Added NodeMap class and mNodeMap member, encapsulates the node map (no way!).
+0.06 - [Pathfinder] Now pathfind will end as soon as the end node has been SET (not waiting for node check).
+0.06 - [Pathfinder] Now draw(..., true) shows all the set nodes (not only the checked ones).
+0.06 - [Pathfinder] Rolled back to old pre-v5 checkedCases() (now called checkedNodes()) behaviour
+0.06 - [Map] Added empty destructor (to allow polymorphism for future implementation of common interface).
+0.06 - [Direction] Added operator!=(...).
+0.06 - [Direction] moved to util directory.
+0.06 - [Console] switched to classic string instead of wstring (temporarly since unconsistant with PathInfo).
+0.06 - [New] Added util/dialogs dialog open wrapper (replacement of "stk_fileopenwrapper").
+
+xx dec 2015
+0.07 - [General] - Dropped custom "Buttons", "Button" and "PathInfo" GUI classes, now using SFGUI.
+0.07 - [General] - Moved several classes into other directories (interface is now graphics, new path directory...)
+0.07 - [Direction] - Added all 8 cardinal directions (added diagonals)
+0.07 - [Pathfinder] - Added support for all 8 cardinal directions (added diagonals)
+0.07 - [Pathfinder] - Path Length is now 100 units per tile (~144 units diagonal) instead of 1.
+0.07 - [Pathfinder] - Moved Pathfinder graphics into new class PathGraphics.
+0.07 - [Pathfinder] - Moved NodeMap and other stuff into new class PathContext.
+0.07 - [Pathfinder] - Renamed to PathFinder (capital F) to be consistent with PathContext and PathGraphics.
+0.07 - [MouseDrawer] - Can now draw lines!
+0.07 - [MouseDrawer] - When drawing freely, if the mouse position jumps over multiple tiles, fills the blanks with a line.
+0.07 - [New] - Added "App" class (replacement for main)
+0.07 - [main] - Moved everything into App
+0.07 - [Console] - To remain consistant, Font is now stored in a std::shared_ptr and retrieved from SFGUI
+0.07 - [Console] - The CONSOLE_LINE_HEIGHT macro has been replaced by static const value Console::msLineHeight.
+0.07 - [Console] - Switched from std::string to sf::String, allowing easier wchar support.
+0.07 - [Console] - replaced ugly line deletion system by something better
+0.07 - [Map] - Moved everything graphics related to graphics/MapGraphics
+0.07 - [New] - Added graphics/components/AnimatedSprite (generalization of removed class Flag)
