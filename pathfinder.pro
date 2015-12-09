@@ -17,9 +17,11 @@ SOURCES += \
     src/main.cpp \
     src/direction.cpp \
     src/map.cpp \
-    src/pathfinder.cpp
+    src/pathfinder.cpp \
+    src/console.cpp
 	
 HEADERS += \
     src/map.h \
     src/direction.h \
-    src/pathfinder.h
+    src/pathfinder.h \
+    src/console.h

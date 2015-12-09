@@ -19,6 +19,10 @@ public:
 	Pathfinder();
 
 	void computePath(Map& map, int fromX, int fromY, int toX, int toY);
+
+	void computePathGraphics();
+	void draw(sf::RenderWindow& window);
+
 	std::vector<Direction>& path();
 
 protected:
@@ -31,6 +35,9 @@ protected:
 private:
 	// Le chemin: un tableau de Direction où chaque "pas" est représenté par une Direction.
 	std::vector<Direction> mPath;
+	sf::VertexArray mPathGraphics;
+	sf::Vector2i mOrigin;
+	sf::Color mGraphicsColor;
 };
 
 #endif // PATHFINDER_H

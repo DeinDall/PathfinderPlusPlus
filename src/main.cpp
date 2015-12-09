@@ -2,9 +2,10 @@
 #include <sstream>
 
 #include "pathfinder.h"
+#include "console.h"
 
 int main(int argc, char** argv) {
-	Map map(32, 18);
+	Map map(24, 18);
 
 	if (argc>1)
 		map.load(std::string(argv[1]));
@@ -14,87 +15,61 @@ int main(int argc, char** argv) {
 
 	sf::Event ev;
 
-	sf::Font font;
-	font.loadFromFile("font.ttf");
-
-	sf::Text text("", font, 16);
-	text.setPosition(8, 8);
-	text.setColor(sf::Color::Red);
-
-	int textTimeout = 0;
+	Console console;
 
 	Pathfinder pathfinder;
 
-	for (unsigned int ix=0; ix<map.width(); ++ix)
-		for (unsigned int iy=0; iy<map.height(); ++iy)
-			map.set(ix, iy, 0);
-
-	static const sf::Color colors[4] = { sf::Color::White, sf::Color::Black, sf::Color::Blue, sf::Color::Green };
+	// Les zones de la fenêtre dans lesquelles nous avons les différents éléments
+	sf::IntRect mapViewRect(0, 0, 768, 576);
+	sf::IntRect guiViewRect(768, 0, 256, 576);
 
 	while (window.isOpen()) {
 		while (window.pollEvent(ev)) {
 			if (ev.type==sf::Event::Closed)
 				window.close();
 			else if (ev.type==sf::Event::MouseButtonPressed) {
-				if (ev.mouseButton.button==sf::Mouse::Right) {
-					sf::Clock clock;
+				if (mapViewRect.contains(ev.mouseButton.x, ev.mouseButton.y)) {
+					if (ev.mouseButton.button==sf::Mouse::Right) {
+						sf::Clock clock;
 
-					pathfinder.computePath(map, 0, 0, ev.mouseButton.x/32, ev.mouseButton.y/32);
+						pathfinder.computePath(map, 0, 0, ev.mouseButton.x/32, ev.mouseButton.y/32);
 
-					sf::Time time = clock.getElapsedTime();
+						sf::Time time = clock.getElapsedTime();
 
-					std::wstringstream wss;
-					wss << L"Chemin calculé en " << time.asMicroseconds() << L"µs";
+						pathfinder.computePathGraphics();
 
-					text.setString(sf::String(wss.str()));
-					textTimeout = 180;
-				} else if (ev.mouseButton.button==sf::Mouse::Left)
-					map.set(ev.mouseButton.x/32, ev.mouseButton.y/32, !map.get(ev.mouseButton.x/32, ev.mouseButton.y/32));
+						std::wstringstream wss;
+						wss << L"Chemin calculé en " << time.asMicroseconds() << L"µs";
+
+						console.addText(wss.str());
+					} else if (ev.mouseButton.button==sf::Mouse::Left)
+						map.set(ev.mouseButton.x/32, ev.mouseButton.y/32, (!map.get(ev.mouseButton.x/32, ev.mouseButton.y/32))*8);
+				} else if (guiViewRect.contains(ev.mouseButton.x, ev.mouseButton.y)){
+					// Trucs de l'Interface ici
+				}
 			} else if (ev.type==sf::Event::KeyPressed) {
 				if (ev.key.code==sf::Keyboard::S) {
 					map.save();
-					text.setString(L"Map sauvegardée sous \"pathfindermap.srpfmp\"");
-					textTimeout = 180;
+					console.addText(L"Map sauvegardee sous \"pathfindermap.srpfmp\"");
 				}
 			}
 		}
 
-		if (textTimeout>0) {
-			textTimeout--;
-			if (textTimeout==0)
-				text.setString("");
-		}
-
+		console.update();
 
 		window.clear();
 
-		sf::RectangleShape shape;
-		shape.setSize(sf::Vector2f(32, 32));
+		map.draw(window);
 
-		for (unsigned int ix=0; ix<map.width(); ++ix)
-			for (unsigned int iy=0; iy<map.height(); ++iy) {
-				shape.setPosition(sf::Vector2f(ix*32, iy*32));
-				shape.setFillColor(colors[map.get(ix, iy)]);
-				window.draw(shape);
-			}
-
-		if (!pathfinder.path().empty()) {
-			sf::Vector2i offset(0, 0);
-			sf::RectangleShape shape;
-
-			shape.setSize(sf::Vector2f(32, 32));
-			shape.setFillColor(sf::Color(64, 255, 0, 128));
-
-			for (Direction dir : pathfinder.path()) {
-				offset.x += dir.xOffset;
-				offset.y += dir.yOffset;
-
-				shape.setPosition(offset.x*32, offset.y*32);
-				window.draw(shape);
-			}
+		for (int i=0; i<map.height(); ++i) {
+			map.drawWallLayer(window, i);
+			// if (player.y == i) player.draw(window);
 		}
 
-		window.draw(text);
+		if (!pathfinder.path().empty())
+			pathfinder.draw(window);
+
+        console.draw(window);
 
 		window.display();
 	}

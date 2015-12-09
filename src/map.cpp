@@ -4,6 +4,8 @@ Map::Map(int w, int h) {
 	mWidth = w;
 	mHeight = h;
 
+	mTexture.loadFromFile("resources/blocks.png");
+
 	init();
 }
 
@@ -21,6 +23,54 @@ int Map::width() {
 
 int Map::height() {
 	return mHeight;
+}
+
+void Map::draw(sf::RenderWindow& window) {
+	static sf::IntRect texRectGround(0, 0, 32, 32);
+
+	sf::Sprite spr;
+	spr.setTexture(mTexture);
+	spr.setTextureRect(texRectGround);
+
+	// dessin du sol
+	for (int ix=0; ix<width(); ++ix) {
+		for (int iy=0; iy<height(); ++iy) {
+			spr.setPosition(ix*32, iy*32);
+			window.draw(spr);
+		}
+	}
+}
+
+void Map::drawWallLayer(sf::RenderWindow& window, int yLayer) {
+	static sf::IntRect texRectGround(0, 0, 32, 32), texRectWall(32, 0, 32, 32);
+
+	sf::Sprite spr;
+	spr.setTexture(mTexture);
+	int yOffset=0;
+	sf::Color color(255, 255, 255, 0);
+
+	for (int ix=0; ix<width(); ++ix) {
+		if (get(ix, yLayer)==0)
+			continue;
+
+		yOffset = -get(ix, yLayer);
+		color.a = (get(ix, yLayer)/8.f*255);
+
+		spr.setColor(sf::Color::White);
+
+		spr.setTextureRect(sf::IntRect(64, 0, 32, -yOffset));
+		spr.setPosition(ix*32, (yLayer+1)*32+yOffset);
+		window.draw(spr);
+
+		spr.setPosition(ix*32, yLayer*32+yOffset);
+
+		spr.setTextureRect(texRectGround);
+		window.draw(spr);
+
+		spr.setTextureRect(texRectWall);
+		spr.setColor(color);
+		window.draw(spr);
+	}
 }
 
 void Map::save() {

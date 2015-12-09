@@ -1,8 +1,13 @@
 #include "pathfinder.h"
 
-Pathfinder::Pathfinder() {}
+Pathfinder::Pathfinder() {
+	mPathGraphics.setPrimitiveType(sf::LinesStrip);
+	mGraphicsColor = sf::Color(32, 128, 0, 128);
+}
 
 void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
+	mOrigin = sf::Vector2i(fromX, fromY);
+
 	std::vector<Node> nodes;
 	nodes.resize(map.width()*map.height());
 
@@ -24,16 +29,6 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 
 	std::list<Node*> remainingNodes;
 	remainingNodes.push_back(&start);
-
-	/*
-	for (Direction dir : Direction::validDirections) {
-		if (map.get(fromX+dir.xOffset, fromY+dir.yOffset) == 0) {
-			Node& n = nodes[positionToArrayIndex(fromX+dir.xOffset, fromY+dir.yOffset, map.width())];
-			n.stepCount = 1;
-			n.previousDirection = dir;
-			remainingNodes.push_back(&n);
-		}
-	} //*/
 
 	while (!remainingNodes.empty()) {
 		Node* n1 = nullptr;
@@ -93,6 +88,24 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	for (int i=0; i<mPath.size(); ++i) {
 		mPath[i] = reversePath[mPath.size()-(i+1)];
 	}
+}
+
+void Pathfinder::computePathGraphics() {
+	mPathGraphics.resize(mPath.size()+1);
+	sf::Vector2f currentPos(mOrigin.x, mOrigin.y);
+
+	mPathGraphics[0] = sf::Vertex(sf::Vector2f(16, 16) + currentPos*32.f, mGraphicsColor);
+
+	for (int i=0; i<mPath.size(); ++i) {
+		currentPos.x += mPath[i].xOffset;
+		currentPos.y += mPath[i].yOffset;
+
+		mPathGraphics[i+1] = sf::Vertex(sf::Vector2f(16, 16) + currentPos*32.f, mGraphicsColor);
+	}
+}
+
+void Pathfinder::draw(sf::RenderWindow& window) {
+	window.draw(mPathGraphics);
 }
 
 std::vector<Direction>& Pathfinder::path() {

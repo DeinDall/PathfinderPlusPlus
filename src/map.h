@@ -1,6 +1,8 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include <SFML/Graphics.hpp>
+
 #include <vector>
 #include <string>
 #include <fstream>
@@ -22,6 +24,11 @@ public:
 	// height(): Cette methode retourne la hauteur de la carte
 	int height();
 
+	// draw(window): Cette methode dessine la map dans la fenetre. Inoptimisée
+	void draw(sf::RenderWindow& window);
+
+	void drawWallLayer(sf::RenderWindow& window, int yLayer);
+
 	void save();
 
 	void load(std::string file);
@@ -33,6 +40,8 @@ protected:
 private:
 	std::vector<int> mData;
 	int mWidth, mHeight;
+
+	sf::Texture mTexture;
 };
 
 #endif // MAP_H
