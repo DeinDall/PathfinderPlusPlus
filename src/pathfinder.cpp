@@ -7,6 +7,12 @@ Pathfinder::Pathfinder() {
 
 void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	mOrigin = sf::Vector2i(fromX, fromY);
+	mCheckedCases = 0;
+
+	mStepCountMap.resize(map.width()*map.height());
+	for (int& i : mStepCountMap)
+		i = -1;
+	mMapWidth = map.width();
 
 	std::vector<Node> nodes;
 	nodes.resize(map.width()*map.height());
@@ -33,13 +39,18 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	while (!remainingNodes.empty()) {
 		Node* n1 = nullptr;
 
+		// Ceci n'est pas part de l'algorithme, mais sert a suivre son fonctionnement
+		mCheckedCases++;
+
 		// On cherche le noeud ayant le chemin le plus court depuis le début
 		for (Node* node : remainingNodes) {
 			if (n1==nullptr)
 				n1 = node;
-			else if ((n1->stepCount + manhattan(n1->x, n1->y, end.x, end.y))>(node->stepCount + manhattan(n1->x, n1->y, end.x, end.y)))
+			else if ((n1->stepCount + manhattan(n1->x, n1->y, end.x, end.y))>(node->stepCount + manhattan(node->x, node->y, end.x, end.y)))
 				n1 = node;
 		}
+
+		mStepCountMap[positionToArrayIndex(n1->x, n1->y, map.width())] = n1->stepCount;
 
 		// Si on tombe sur la fin, on a le chemin le plus court vers la fin.
 		if (n1 == &end)
@@ -73,8 +84,10 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 
 	Node* n = &end;
 
-	if (!n->previousDirection.isValid())
+	if (!n->previousDirection.isValid()) {
+		mPath.clear();
 		return;
+	}
 
 	while (n != &start) {
 		reversePath.push_back(n->previousDirection);
@@ -104,12 +117,33 @@ void Pathfinder::computePathGraphics() {
 	}
 }
 
-void Pathfinder::draw(sf::RenderWindow& window) {
+void Pathfinder::draw(sf::RenderWindow& window, bool doStepCountMap) {
+	glLineWidth(4.f);
 	window.draw(mPathGraphics);
+	glLineWidth(1.f);
+
+	if (doStepCountMap) {
+		sf::RectangleShape rect(sf::Vector2f(6, 6));
+
+		for (int i=0; i<mStepCountMap.size(); ++i) {
+			if (mStepCountMap[i]==-1)
+				continue;
+			int x = i%mMapWidth, y = i/mMapWidth;
+
+			rect.setFillColor(sf::Color((mStepCountMap[i]/(float)mPath.size())*255, 64,
+										255-(mStepCountMap[i]/(float)mPath.size())*255));
+			rect.setPosition(x*32+13, y*32+13);
+			window.draw(rect);
+		}
+	}
 }
 
 std::vector<Direction>& Pathfinder::path() {
 	return mPath;
+}
+
+int Pathfinder::checkedCases() {
+	return mCheckedCases;
 }
 
 bool Pathfinder::tilesAreConnected(int x1, int y1, int x2, int y2) {

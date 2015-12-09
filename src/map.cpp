@@ -1,5 +1,7 @@
 #include "map.h"
 
+#define sign(x) (x>0 ? 1 : -1)
+
 Map::Map(int w, int h) {
 	mWidth = w;
 	mHeight = h;
@@ -10,11 +12,11 @@ Map::Map(int w, int h) {
 }
 
 int Map::get(int x, int y) {
-	return mData[y*mWidth+x];
+	return mData[y*mWidth+x].drawVal;
 }
 
-void Map::set(int x, int y, int val) {
-	mData[y*mWidth+x] = val;
+void Map::set(int x, int y, bool val) {
+	mData[y*mWidth+x].val = val;
 }
 
 int Map::width() {
@@ -23,6 +25,19 @@ int Map::width() {
 
 int Map::height() {
 	return mHeight;
+}
+
+void Map::clear() {
+	for (unsigned int i=0; i<mData.size(); ++i) {
+		mData[i].val = false;
+	}
+}
+
+void Map::update() {
+	for (unsigned int i=0; i<mData.size(); ++i) {
+		if (mData[i].drawVal!=(mData[i].val*8))
+			mData[i].drawVal -= sign(mData[i].drawVal-(mData[i].val*8));
+	}
 }
 
 void Map::draw(sf::RenderWindow& window) {
@@ -73,32 +88,34 @@ void Map::drawWallLayer(sf::RenderWindow& window, int yLayer) {
 	}
 }
 
-void Map::save() {
-	std::ofstream file;
-	file.open("pathfindermap.srpfmp", std::ofstream::binary | std::ofstream::trunc);
+void Map::save(std::wstring file) {
+	std::ofstream ffile;
+	ffile.open(sf::String(file).toAnsiString(), std::ofstream::binary | std::ofstream::trunc);
 
-	file.write(reinterpret_cast<const char*>(&mWidth), sizeof(int));
-	file.write(reinterpret_cast<const char*>(&mHeight), sizeof(int));
-	file.write(reinterpret_cast<const char*>(&mData[0]), sizeof(int)*mData.size());
+	ffile.write(reinterpret_cast<const char*>(&mWidth), sizeof(int));
+	ffile.write(reinterpret_cast<const char*>(&mHeight), sizeof(int));
+	ffile.write(reinterpret_cast<const char*>(&mData[0]), sizeof(tile)*mData.size());
 
-	file.close();
+	ffile.close();
 }
 
-void Map::load(std::string file) {
+void Map::load(std::wstring file) {
 	std::ifstream ffile;
-	ffile.open(file, std::ifstream::binary);
+	ffile.open(sf::String(file).toAnsiString(), std::ifstream::binary);
 
 	ffile.read(reinterpret_cast<char*>(&mWidth), sizeof(int));
 	ffile.read(reinterpret_cast<char*>(&mHeight), sizeof(int));
 
 	mData.resize(mWidth*mHeight);
-	ffile.read(reinterpret_cast<char*>(&mData[0]), sizeof(int)*mData.size());
+	ffile.read(reinterpret_cast<char*>(&mData[0]), sizeof(tile)*mData.size());
 
 	ffile.close();
 }
 
 void Map::init() {
 	mData.resize(mWidth*mHeight);
-	for (unsigned int i=0; i<mData.size(); ++i)
-		mData[i] = 0;
+	for (unsigned int i=0; i<mData.size(); ++i) {
+		mData[i].drawVal = 0;
+		mData[i].val = false;
+	}
 }

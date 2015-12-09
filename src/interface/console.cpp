@@ -2,8 +2,8 @@
 
 #define CONSOLE_LINE_HEIGHT 24
 
-Console::Console() {
-	mFont.loadFromFile("resources/font.ttf");
+Console::Console(sf::Font& font) : mFont(font) {
+	addText(L"Programme lancé");
 }
 
 Console::~Console() {
@@ -11,7 +11,7 @@ Console::~Console() {
 		delete line;
 }
 
-void Console::addText(std::wstring text) {
+void Console::addText(const std::wstring& text) {
 	ConsoleLine* line = new ConsoleLine;
 
 	line->text.setFont(mFont);
@@ -19,7 +19,7 @@ void Console::addText(std::wstring text) {
 	line->text.setString(sf::String(text));
 	line->text.setColor(sf::Color::Red);
 
-	line->timeout = 180;
+	line->timeout = 160;
 	line->y = -CONSOLE_LINE_HEIGHT;
 
 	mLines.push_front(line);
@@ -27,22 +27,31 @@ void Console::addText(std::wstring text) {
 
 void Console::update() {
 	int i=0;
-	for (ConsoleLine* line : mLines) {
+	std::vector<std::list<ConsoleLine*>::iterator> toDelete;
+
+	for (auto it = mLines.begin(); it != mLines.end(); ++it) {
+		if (mLines.empty()) // Ceci est là pour empècher le crash.
+			break;
+
+		ConsoleLine* line = *it;
 		if (line->y < i*CONSOLE_LINE_HEIGHT)
 			line->y -= ((line->y - i*CONSOLE_LINE_HEIGHT)/8)-1;
+		++i;
 
 		line->timeout--;
 
 		if (line->timeout==0) {
-			mLines.remove(line);
+			toDelete.push_back(it);
 			delete line;
-		} else if (line->timeout<60)
-			line->text.setColor(sf::Color(255, 0, 0, (line->timeout/60.f)*255));
-
-		line->text.setPosition(sf::Vector2f(8, 8+line->y));
-
-		++i;
+		} else {
+			if (line->timeout<40)
+				line->text.setColor(sf::Color(255, 0, 0, (line->timeout/40.f)*255));
+			line->text.setPosition(sf::Vector2f(8, 8+line->y));
+		}
 	}
+
+	for (auto it : toDelete)
+		mLines.erase(it);
 }
 
 void Console::draw(sf::RenderWindow& window) {

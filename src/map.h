@@ -16,7 +16,7 @@ public:
 	int get(int x, int y);
 
 	// set(x, y, val): Cette methode modifie la valeure de la tuile aux coordonées données (/!\: non sécurisé).
-	void set(int x, int y, int val);
+	void set(int x, int y, bool val);
 
 	// width(): Cette methode retourne la largeur de la carte
 	int width();
@@ -24,21 +24,26 @@ public:
 	// height(): Cette methode retourne la hauteur de la carte
 	int height();
 
+	void clear();
+
+	void update();
+
 	// draw(window): Cette methode dessine la map dans la fenetre. Inoptimisée
 	void draw(sf::RenderWindow& window);
 
 	void drawWallLayer(sf::RenderWindow& window, int yLayer);
 
-	void save();
+	void save(std::wstring file);
 
-	void load(std::string file);
+	void load(std::wstring file);
 
 protected:
 	// init(): Cette methode initialise le tableau de données selon la taille de la carte.
 	void init();
 
 private:
-	std::vector<int> mData;
+	struct tile { int drawVal; bool val; };
+	std::vector<tile> mData;
 	int mWidth, mHeight;
 
 	sf::Texture mTexture;

@@ -5,7 +5,7 @@
 #include "direction.h"
 
 #include <list>
-#include <cstdlib>
+#include "GL/gl.h"
 
 // classe calculant le chemin le plus court à l'aide de l'algorithme de Dijkstra/A*
 class Pathfinder {
@@ -21,9 +21,12 @@ public:
 	void computePath(Map& map, int fromX, int fromY, int toX, int toY);
 
 	void computePathGraphics();
-	void draw(sf::RenderWindow& window);
+
+	void draw(sf::RenderWindow& window, bool doStepCountMap);
 
 	std::vector<Direction>& path();
+
+	int checkedCases();
 
 protected:
 	bool tilesAreConnected(int x1, int y1, int x2, int y2);
@@ -38,6 +41,10 @@ private:
 	sf::VertexArray mPathGraphics;
 	sf::Vector2i mOrigin;
 	sf::Color mGraphicsColor;
+
+	int mCheckedCases;
+	int mMapWidth;
+	std::vector<int> mStepCountMap;
 };
 
 #endif // PATHFINDER_H
