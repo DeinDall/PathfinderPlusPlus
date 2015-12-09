@@ -4,7 +4,7 @@
 #include "pathfinder.h"
 #include "mousedrawer.h"
 
-#include "interface/stk_fileopenwrapper.h"
+#include "util/dialogs.h"
 
 #include "interface/console.h"
 #include "interface/buttons.h"
@@ -18,7 +18,7 @@ int main(int, char**) {
 	// La carte, qui contient tous les blocs sous forme booléene.
 	Map map(24, 18);
 
-	sf::RenderWindow window(sf::VideoMode(1024, 576), "Pathfinder", sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(1024, 576), "Pathfinder++", sf::Style::Close);
 	window.setFramerateLimit(60);
 
 	// Les zones de la fenêtre dans lesquelles nous avons les différents éléments
@@ -49,6 +49,9 @@ int main(int, char**) {
 	// showAdvancedPath: true si l'on affiche le poids de chaque case ayant été vérifiée (Pathfinder)
 	bool showAdvancedPath=false;
 
+	// doQuickPathfind: false pour executer etape par etape
+	bool doQuickPathfind=false;
+
 	// L'instance de la classe Pathfinder, calcule le chemin.
 	Pathfinder pathfinder;
 
@@ -59,6 +62,7 @@ int main(int, char**) {
 
 	// Ici, on met le texte sur les boutons.
 	buttons.getButtonFromId(Buttons::BTN_SHOWCASES).setContents(L"Afficher le poids des cases");
+	buttons.getButtonFromId(Buttons::BTN_FAST).setContents(L"Activer la recherche instantanée");
 	buttons.getButtonFromId(Buttons::BTN_CLEAR).setContents(L"Remettre à zero");
 	buttons.getButtonFromId(Buttons::BTN_RECOMPUTE).setContents(L"Rafraichir le chemin");
 	buttons.getButtonFromId(Buttons::BTN_SETSTART).setContents(L"Placer le début");
@@ -116,7 +120,7 @@ int main(int, char**) {
 
 		// Ici on parcours les évènements envoyés par les boutons
 		while (buttons.popClick(buttonEv)) {
-			std::wstring fname;
+			std::string fname;
 			switch (buttonEv) {
 			case Buttons::BTN_SHOWCASES:
 				showAdvancedPath = !showAdvancedPath;
@@ -126,32 +130,43 @@ int main(int, char**) {
 				else
 					buttons.getButtonFromId(Buttons::BTN_SHOWCASES).setContents(L"Afficher le poids des cases");
 				break;
-			case Buttons::BTN_CLEAR:
-				if (stk::yesNoWarningMessage(window, L"Voulez-vous vraiment supprimer toute la carte ?"))
-					map.clear();
+
+			case Buttons::BTN_FAST:
+				doQuickPathfind = !doQuickPathfind;
+
+				if (doQuickPathfind)
+					buttons.getButtonFromId(Buttons::BTN_FAST).setContents(L"Désactiver la recherche instantanée");
+				else
+					buttons.getButtonFromId(Buttons::BTN_FAST).setContents(L"Activer la recherche instantanée");
 				break;
 
 			case Buttons::BTN_RECOMPUTE:
 				shouldUpdatePath=true;
 				break;
 
-			case Buttons::BTN_SAVE:
-				fname = stk::getSaveFileName(window);
-
-				if (fname != L"error") {
-					map.save(fname);
-					console.addText(L"Fichier enregistré");
-				} else
-					console.addText(L"Erreur lors de la sauvegarde");
+			case Buttons::BTN_CLEAR:
+				if (dialogs::openMessage("Attention !", "Voulez-vous vraiment supprimer toute la carte ?", dialogs::LevelWarning, dialogs::ButtonsYesNo))
+					map.clear();
 				break;
-			case Buttons::BTN_LOAD:
-				fname = stk::getOpenFileName(window);
 
-				if (fname != L"error") {
-					map.load(fname);
-					console.addText(L"Fichier chargé");
+			case Buttons::BTN_SAVE:
+				fname = dialogs::getSaveFileName("Sauvegarder", ".", "fichiers Pathfinder", { "*.pthfndr" });
+
+				if (fname != "error") {
+					map.save(fname);
+					console.addText("Fichier enregistré");
 				} else
-					console.addText(L"Erreur lors du chargement");
+					console.addText("Erreur lors de la sauvegarde");
+				break;
+
+			case Buttons::BTN_LOAD:
+				fname = dialogs::getOpenFileName("Ouvrir", ".", "fichiers Pathfinder", { "*.pthfndr" });
+
+				if (fname != "error") {
+					map.load(fname);
+					console.addText("Fichier chargé");
+				} else
+					console.addText("Erreur lors du chargement");
 				break;
 
 			case Buttons::BTN_SETSTART:
@@ -183,22 +198,31 @@ int main(int, char**) {
 
 		// Ici, on fait le calcul du chemin, ainsi que la mesure du temps
 		if (shouldUpdatePath) {
-			sf::Clock clock;
+			if (doQuickPathfind) {
+				sf::Clock clock;
 
-			pathfinder.computePath(map, startPos.x, startPos.y, endPos.x, endPos.y);
+				pathfinder.computePath(map, startPos.x, startPos.y, endPos.x, endPos.y);
 
-			sf::Time time = clock.getElapsedTime();
+				sf::Time time = clock.getElapsedTime();
 
-			pathfinder.computePathGraphics();
+				pathfinder.computePathGraphics();
 
-			std::wstringstream wss;
-			wss << L"Chemin calculé en " << time.asMicroseconds() << L"µs";
+				std::stringstream wss;
+				wss << "Chemin calculé en " << time.asMicroseconds() << "µs";
 
-			console.addText(wss.str());
+				console.addText(wss.str());
 
-			pathInfo.setInformations(pathfinder.path().size(), time.asMicroseconds(), pathfinder.checkedCases());
-
+				pathInfo.setInformations(pathfinder.path().size(), time.asMicroseconds(), pathfinder.checkedNodes());
+			} else
+				pathfinder.startPathfind(map, startPos.x, startPos.y, endPos.x, endPos.y);
 			shouldUpdatePath=false;
+		}
+
+		if (!pathfinder.pathfindFinished()) {
+			pathfinder.forwardPathfind();
+			pathfinder.generatePath();
+			pathfinder.computePathGraphics();
+			pathInfo.setInformations(pathfinder.path().size(), 0, pathfinder.checkedNodes());
 		}
 
 		// On met à jour les éléments effectuants des animations.

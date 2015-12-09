@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#define CONSOLE_LINE_HEIGHT 24
+
 class Console {
 	struct ConsoleLine {
 		sf::Text text;
@@ -17,9 +19,10 @@ public:
 	Console(sf::Font& font);
 	~Console();
 
-	void addText(const std::wstring& text);
+	void addText(const std::string& text);
 
 	void update();
+
 	void draw(sf::RenderWindow& window);
 
 private:

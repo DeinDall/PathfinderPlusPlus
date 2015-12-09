@@ -10,6 +10,7 @@ public:
 	void setPosition(sf::Vector2f pos);
 
 	void update();
+
 	void draw(sf::RenderWindow& window);
 
 	void setImage(int img);
@@ -19,6 +20,7 @@ private:
 	sf::Sprite mSprite;
 
 	float mImage;
+	unsigned int mImageCount;
 };
 
 #endif // FLAG_H

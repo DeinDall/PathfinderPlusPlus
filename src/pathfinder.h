@@ -2,7 +2,7 @@
 #define PATHFINDER_H
 
 #include "map.h"
-#include "direction.h"
+#include "util/direction.h"
 
 #include <GL/gl.h>
 #include <list>
@@ -11,39 +11,75 @@
 class Pathfinder {
 	struct Node {
 		int x, y;
-		int stepCount;
+		unsigned int stepCount;
 		Direction previousDirection;
+	};
+
+	class NodeMap {
+	public:
+		NodeMap(const Map& map);
+		Node* get(unsigned int x, unsigned int y);
+		bool isWall(unsigned int x, unsigned int y) const;
+		bool inMap(unsigned int x, unsigned int y) const;
+		unsigned int width() const;
+		unsigned int height() const;
+
+	private:
+		std::vector<Node> mNodes;
+		std::vector<bool> mWalls;
+		unsigned int mWidth, mHeight;
 	};
 
 public:
 	Pathfinder();
-
-	void computePath(Map& map, int fromX, int fromY, int toX, int toY);
+	~Pathfinder();
 
 	void computePathGraphics();
 	void draw(sf::RenderWindow& window, bool doStepCountMap);
 
-	std::vector<Direction>& path();
+	std::list<Direction>& path();
 
-	int checkedCases();
+	unsigned int checkedNodes() const;
+
+	void computePath(Map& map, int fromX, int fromY, int toX, int toY);
+
+	void startPathfind(Map& map, int fromX, int fromY, int toX, int toY);
+	bool pathfindFinished() const;
+	void forwardPathfind();
+	void generatePath();
 
 protected:
-	// NOTE: cette fonction est inutilisée
-	bool tilesAreConnected(int x1, int y1, int x2, int y2);
-
-	int manhattan(int x1, int y1, int x2, int y2);
-
-	int positionToArrayIndex(int x, int y, int w);
+	Node* getWantedUncheckedNode();
+	Node* getCloserUncheckedNode();
+	Node* getBestUncheckedNode();
+	void checkNode(Node* node);
 
 private:
-	// Le chemin: un tableau de Direction où chaque "pas" est représenté par une Direction.
-	std::vector<Direction> mPath;
+	void resetNodeMap(const Map& map);
+	void freeNodeMap();
+
+	int manhattan(Node* one, Node* two);
+
+private:
 	sf::VertexArray mPathGraphics;
 	sf::Vector2i mOrigin;
 	sf::Color mGraphicsColor;
 
-	int mMapWidth;
-	std::vector<int> mStepCountMap;
+	bool mUseAStar;
+	bool mStarted;
+
+	std::list<Direction> mPath;
+
+	NodeMap* mNodeMap;
+	std::list<Node*> mUncheckedNodes;
+	Node* mStartNode;
+	Node* mEndNode;
+	Node* mPathEndNode;
+
+	unsigned int mStatCheckedNodes;
+
+public:
+	static const unsigned int msInvalidStepCount;
 };
 
 #endif // PATHFINDER_H

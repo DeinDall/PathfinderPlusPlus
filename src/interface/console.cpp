@@ -1,9 +1,7 @@
 #include "console.h"
 
-#define CONSOLE_LINE_HEIGHT 24
-
 Console::Console(sf::Font& font) : mFont(font) {
-	addText(L"Programme lancé");
+	addText("Programme lancé");
 }
 
 Console::~Console() {
@@ -11,7 +9,7 @@ Console::~Console() {
 		delete line;
 }
 
-void Console::addText(const std::wstring& text) {
+void Console::addText(const std::string& text) {
 	ConsoleLine* line = new ConsoleLine;
 
 	line->text.setFont(mFont);

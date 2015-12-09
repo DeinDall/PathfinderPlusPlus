@@ -2,19 +2,20 @@
 #define BUTTONS_H
 
 #include "button.h"
-#include <list>
 #include <queue>
 
 class Buttons {
 public:
 	enum ButtonId {
+		BTN_RECOMPUTE,
+
 		BTN_SHOWCASES,
+		BTN_FAST,
 
 		BTN_CLEAR,
 
 		BTN_SETSTART,
 		BTN_PATHSEARCH,
-		BTN_RECOMPUTE,
 
 		BTN_SAVE,
 		BTN_LOAD,
@@ -29,9 +30,11 @@ public:
 	Button& getButtonFromId(ButtonId id);
 
 	void onMousePress(sf::Vector2i pos);
+
 	void onMouseRelease(sf::Vector2i pos);
 
 	void update(sf::Vector2i pos);
+
 	void draw(sf::RenderWindow& window);
 
 	bool popClick(ButtonId& id);

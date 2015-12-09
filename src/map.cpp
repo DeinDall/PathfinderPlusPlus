@@ -1,5 +1,7 @@
 #include "map.h"
 
+#include <fstream>
+
 #define sign(x) (x>0 ? 1 : -1)
 
 Map::Map(int w, int h) {
@@ -11,7 +13,9 @@ Map::Map(int w, int h) {
 	init();
 }
 
-int Map::get(int x, int y) {
+Map::~Map() {}
+
+int Map::get(int x, int y) const {
 	return mData[y*mWidth+x].drawVal;
 }
 
@@ -19,11 +23,11 @@ void Map::set(int x, int y, bool val) {
 	mData[y*mWidth+x].val = val;
 }
 
-int Map::width() {
+int Map::width() const {
 	return mWidth;
 }
 
-int Map::height() {
+int Map::height() const {
 	return mHeight;
 }
 
@@ -93,7 +97,7 @@ void Map::drawWallLayer(sf::RenderWindow& window, int yLayer) {
 	}
 }
 
-void Map::save(std::wstring file) {
+void Map::save(std::string file) {
 	std::ofstream ffile;
 	ffile.open(sf::String(file).toAnsiString(), std::ofstream::binary | std::ofstream::trunc);
 
@@ -104,7 +108,7 @@ void Map::save(std::wstring file) {
 	ffile.close();
 }
 
-void Map::load(std::wstring file) {
+void Map::load(std::string file) {
 	std::ifstream ffile;
 	ffile.open(sf::String(file).toAnsiString(), std::ifstream::binary);
 

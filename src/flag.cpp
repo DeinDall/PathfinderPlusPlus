@@ -2,6 +2,7 @@
 
 Flag::Flag(std::string flagTexName) {
 	mTexture.loadFromFile(sf::String(std::string("resources/") + flagTexName));
+	mImageCount = mTexture.getSize().x/32;
 	mSprite.setTexture(mTexture);
 	mImage = 0.f;
 }
@@ -13,8 +14,8 @@ void Flag::setPosition(sf::Vector2f pos) {
 void Flag::update() {
 	mImage += 0.2;
 
-	if (mImage >= 8)
-		mImage -= 8; // mieux que =0, car permet de garder le décalage si jamais il y a.
+	if (mImage >= mImageCount)
+		mImage -= mImageCount; // mieux que =0, car permet de garder le décalage si jamais il y a.
 
 	setImage((int)mImage);
 }

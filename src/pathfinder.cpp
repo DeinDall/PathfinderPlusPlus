@@ -1,124 +1,81 @@
 #include "pathfinder.h"
+#include <algorithm>
 
-Pathfinder::Pathfinder() {
-	mPathGraphics.setPrimitiveType(sf::LinesStrip);
-	mGraphicsColor = sf::Color(32, 128, 0, 128);
-}
+const unsigned int Pathfinder::msInvalidStepCount(UINT_MAX);
 
-void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
-	mOrigin = sf::Vector2i(fromX, fromY);
+Pathfinder::NodeMap::NodeMap(const Map& map) : mWidth(map.width()), mHeight(map.height()) {
+	mNodes.resize(mWidth*mHeight);
+	mWalls.resize(mWidth*mHeight);
 
-	mStepCountMap.resize(map.width()*map.height());
-	for (int& i : mStepCountMap)
-		i = -1;
-	mMapWidth = map.width();
+	for (int ix=0; ix<mWidth; ++ix) {
+		for (int iy=0; iy<mHeight; ++iy) {
+			mWalls[ix+iy*mWidth] = map.get(ix, iy)!=0;
+			Node& node = mNodes[ix+iy*mWidth];
 
-	std::vector<Node> nodes;
-	nodes.resize(map.width()*map.height());
-
-	// on initialise les cases.
-	for (int ix=0; ix<map.width(); ++ix) {
-		for (int iy=0; iy<map.height(); ++iy) {
-			Node& node = nodes[positionToArrayIndex(ix, iy, map.width())];
-
-			node.stepCount = -1;
+			node.stepCount = msInvalidStepCount;
 
 			node.x = ix;
 			node.y = iy;
 		}
 	}
+}
 
-	Node& start = nodes[positionToArrayIndex(fromX, fromY, map.width())];
-	Node& end = nodes[positionToArrayIndex(toX, toY, map.width())];
+Pathfinder::Node* Pathfinder::NodeMap::get(unsigned int x, unsigned int y) {
+	return &mNodes[x+y*mWidth];
+}
 
-	start.stepCount=0;
+bool Pathfinder::NodeMap::isWall(unsigned int x, unsigned int y) const {
+	return mWalls[x+y*mWidth];
+}
 
-	std::list<Node*> remainingNodes;
-	remainingNodes.push_back(&start);
+bool Pathfinder::NodeMap::inMap(unsigned int x, unsigned int y) const {
+	return !(x<0 || y<0 || x>=mWidth || y>=mHeight);
+}
 
-	while (!remainingNodes.empty()) {
-		Node* n1 = nullptr;
+unsigned int Pathfinder::NodeMap::width() const {
+	return mWidth;
+}
 
-		// On cherche le noeud ayant le chemin le plus court depuis le début
-		for (Node* node : remainingNodes) {
-			if (n1==nullptr)
-				n1 = node;
-			else if ((n1->stepCount + manhattan(n1->x, n1->y, end.x, end.y))>(node->stepCount + manhattan(node->x, node->y, end.x, end.y)))
-				n1 = node;
-		}
+unsigned int Pathfinder::NodeMap::height() const {
+	return mHeight;
+}
 
-		// Ceci n'est pas part de l'algorithme, mais sert a suivre son fonctionnement
-		mStepCountMap[positionToArrayIndex(n1->x, n1->y, map.width())] = n1->stepCount;
+Pathfinder::Pathfinder() : mStarted(false), mUseAStar(true) {
+	mPathGraphics.setPrimitiveType(sf::LinesStrip);
+	mGraphicsColor = sf::Color(32, 128, 0, 128);
+}
 
-		// Si on tombe sur la fin, on a le chemin le plus court vers la fin.
-		if (n1 == &end)
-			break;
+Pathfinder::~Pathfinder() {
+	if (mStarted)
+		delete mNodeMap;
+}
 
-		// On enleve le noeud trouvé de la liste d'attente
-		remainingNodes.remove(n1);
+void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
+	startPathfind(map, fromX, fromY, toX, toY);
 
-		// On parcourt les voisins de notre noeud
-		for (Direction dir : Direction::validDirections) {
-			int n2x = n1->x + dir.xOffset, n2y = n1->y+dir.yOffset;
+	while (!pathfindFinished())
+		forwardPathfind();
 
-			if (dir==n1->previousDirection.opposite())
-				continue; // inutile, c'est la d'où on viens.
-			else if (n2x<0 || n2x>=map.width() || n2y<0 || n2y>=map.height())
-				continue; // inutile, c'est hors de la map.
-			else if (map.get(n2x, n2y) != 0)
-				continue; // inutile, c'est un mur.
-
-			Node& n2 = nodes[positionToArrayIndex(n2x, n2y, map.width())];
-
-			// Si jamais le chemin actuel pour cette case est plus court que le chemin que l'on connaissait déjà.
-			if ((n2.stepCount==-1) || (n2.stepCount > n1->stepCount+1) ) {
-				n2.stepCount = n1->stepCount+1;
-				n2.previousDirection = dir;
-				remainingNodes.push_back(&n2);
-			}
-		}
-	}
-
-	std::vector<Direction> reversePath;
-
-	Node* n = &end;
-
-	if (!n->previousDirection.isValid()) {
-		// On a pas trouvé la fin, ça signifie que la fin est inaccessible.
-		mPath.clear();
-		return;
-	}
-
-	while (n != &start) {
-		reversePath.push_back(n->previousDirection);
-
-		Direction opp = n->previousDirection.opposite();
-		n = &nodes[positionToArrayIndex(n->x + opp.xOffset, n->y + opp.yOffset, map.width())];
-	}
-
-	mPath.resize(reversePath.size());
-
-	for (int i=0; i<mPath.size(); ++i) {
-		mPath[i] = reversePath[mPath.size()-(i+1)];
-	}
+	generatePath();
 }
 
 void Pathfinder::computePathGraphics() {
 	mPathGraphics.resize(mPath.size()+1);
-	sf::Vector2f currentPos(mOrigin.x, mOrigin.y);
+	sf::Vector2f currentPos(mStartNode->x, mStartNode->y);
 
 	mPathGraphics[0] = sf::Vertex(sf::Vector2f(16, 16) + currentPos*32.f, mGraphicsColor);
 
-	for (int i=0; i<mPath.size(); ++i) {
-		currentPos.x += mPath[i].xOffset;
-		currentPos.y += mPath[i].yOffset;
+	int i=0;
+	for (Direction dir : mPath) {
+		currentPos.x += dir.xOffset;
+		currentPos.y += dir.yOffset;
 
-		mPathGraphics[i+1] = sf::Vertex(sf::Vector2f(16, 16) + currentPos*32.f, mGraphicsColor);
+		mPathGraphics[++i] = sf::Vertex(sf::Vector2f(16, 16) + currentPos*32.f, mGraphicsColor);
 	}
 }
 
 void Pathfinder::draw(sf::RenderWindow& window, bool doStepCountMap) {
-	if (!mPath.empty()) {
+	if (mPathGraphics.getVertexCount()>2) {
 		// je vous présente un petit hack de la SFML au travers de OpenGL.
 		glLineWidth(4.f);
 		window.draw(mPathGraphics);
@@ -126,47 +83,151 @@ void Pathfinder::draw(sf::RenderWindow& window, bool doStepCountMap) {
 	}
 
 	// Ici on dessine les cases visitées dans une couleure dépendante de leur distance en pas de l'origine
-	if (doStepCountMap && !mStepCountMap.empty()) {
+	if (doStepCountMap && mStarted) {
 		sf::RectangleShape rect(sf::Vector2f(6, 6));
+		int gradiantGoal = mPath.size()+manhattan(mPathEndNode, mEndNode);
 
 		// On parcours la carte des nombres de pas
-		for (int i=0; i<mStepCountMap.size(); ++i) {
-			if (mStepCountMap[i]==-1)
-				continue; // on affiche pas les cases non visitées
-			int x = i%mMapWidth, y = i/mMapWidth;
+		for (unsigned int ix=0; ix<mNodeMap->width(); ++ix) {
+			for (unsigned int iy=0; iy<mNodeMap->height(); ++iy) {
+				unsigned int sc = mNodeMap->get(ix, iy)->stepCount;
+				if (sc==msInvalidStepCount)
+					continue; // on affiche pas les cases non visitées
 
-			// Ceci est un dégradé Bleu/Cyan -> Rouge/Orange
-			rect.setFillColor(sf::Color((mStepCountMap[i]/(float)mPath.size())*255, 64,
-										255-(mStepCountMap[i]/(float)mPath.size())*255));
+				// Ceci est un dégradé Bleu/Cyan -> Rouge/Orange
+				rect.setFillColor(sf::Color((sc/(float)gradiantGoal)*255, 64,
+											255-(sc/(float)gradiantGoal)*255));
 
-			// On dessine à la position voulue
-			rect.setPosition(x*32+13, y*32+13);
-			window.draw(rect);
+				// On dessine à la position voulue
+				rect.setPosition(ix*32+13, iy*32+13);
+				window.draw(rect);
+			}
+
 		}
 	}
 }
 
-std::vector<Direction>& Pathfinder::path() {
+std::list<Direction>& Pathfinder::path() {
 	return mPath;
 }
 
-int Pathfinder::checkedCases() {
-	int count = 0;
-	for (int i=0; i<mStepCountMap.size(); ++i)
-		if (mStepCountMap[i]!=-1)
-			count++;
-	return count;
+unsigned int Pathfinder::checkedNodes() const {
+	return mStatCheckedNodes;
 }
 
-bool Pathfinder::tilesAreConnected(int x1, int y1, int x2, int y2) {
-	// deux tuiles sont connectées si la distance de manhattan entre ces deux tuiles est egales à 1.
-	return (manhattan(x1, y1, x2, y2) == 1);
+void Pathfinder::startPathfind(Map& map, int fromX, int fromY, int toX, int toY) {
+	resetNodeMap(map);
+
+	mStatCheckedNodes=0;
+
+	mPath.clear();
+
+	mStartNode = mNodeMap->get(fromX, fromY);
+	mEndNode = mNodeMap->get(toX, toY);
+
+	mStartNode->stepCount=0;
+
+	mUncheckedNodes.clear();
+	mUncheckedNodes.push_back(mStartNode);
+
+	computePathGraphics();
 }
 
-int Pathfinder::manhattan(int x1, int y1, int x2, int y2) {
-	return std::abs(x1-x2)+std::abs(y1-y2);
+bool Pathfinder::pathfindFinished() const {
+	return mUncheckedNodes.empty() || mEndNode->previousDirection.isValid();
 }
 
-int Pathfinder::positionToArrayIndex(int x, int y, int w) {
-	return y*w+x;
+void Pathfinder::forwardPathfind() {
+	checkNode(getWantedUncheckedNode());
+}
+
+void Pathfinder::generatePath() {
+	mPath.clear();
+
+	Node* node = mEndNode;
+
+	if (!node->previousDirection.isValid())
+		node = getWantedUncheckedNode();
+	if (node==nullptr)
+		node = mStartNode;
+
+	mPathEndNode = node;
+
+	while (node != mStartNode) {
+		mPath.push_front(node->previousDirection);
+
+		Direction opp = node->previousDirection.opposite();
+		node = mNodeMap->get(node->x+opp.xOffset, node->y+opp.yOffset);
+	}
+}
+
+Pathfinder::Node* Pathfinder::getWantedUncheckedNode() {
+	return (mUseAStar ? getBestUncheckedNode() : getCloserUncheckedNode());
+}
+
+Pathfinder::Node* Pathfinder::getCloserUncheckedNode() {
+	Node* curNode = nullptr;
+
+	for (Node* node : mUncheckedNodes) {
+		if (curNode==nullptr)
+			curNode = node;
+		else if (node->stepCount < curNode->stepCount)
+			curNode = node;
+	}
+
+	return curNode;
+}
+
+Pathfinder::Node* Pathfinder::getBestUncheckedNode() {
+	Node* curNode = nullptr;
+
+	for (Node* node : mUncheckedNodes) {
+		if (curNode==nullptr)
+			curNode = node;
+		else if ((node->stepCount+manhattan(node, mEndNode)) < (curNode->stepCount+manhattan(curNode, mEndNode)))
+			curNode = node;
+	}
+
+	return curNode;
+}
+
+void Pathfinder::checkNode(Node* node) {
+	for (Direction dir : Direction::validDirections) {
+		sf::Vector2i nodePos(node->x+dir.xOffset, node->y+dir.yOffset);
+
+		if (dir.opposite()==node->previousDirection)
+			continue;
+		else if (!mNodeMap->inMap(nodePos.x, nodePos.y))
+			continue;
+		else if (mNodeMap->isWall(nodePos.x, nodePos.y))
+			continue;
+
+		Node* n = mNodeMap->get(nodePos.x, nodePos.y);
+
+		if (node->stepCount+1 < n->stepCount) {
+			if (!n->previousDirection.isValid()) // means has not been added yet
+				mUncheckedNodes.push_back(n);
+
+			n->stepCount = node->stepCount+1;
+			n->previousDirection = dir;
+		}
+	}
+
+	mUncheckedNodes.remove(node);
+	++mStatCheckedNodes;
+}
+
+void Pathfinder::resetNodeMap(const Map& map) {
+	freeNodeMap();
+	mNodeMap = new NodeMap(map);
+	mStarted = true;
+}
+
+void Pathfinder::freeNodeMap() {
+	if (mStarted)
+		delete mNodeMap;
+}
+
+int Pathfinder::manhattan(Node* one, Node* two) {
+	return std::abs(one->x-two->x)+std::abs(one->y-two->y);
 }

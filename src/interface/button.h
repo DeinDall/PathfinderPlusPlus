@@ -8,22 +8,26 @@ public:
 	Button(sf::IntRect geometry, int buttonId);
 
 	void onMousePressed(sf::Vector2i mousePos);
+
 	void onMouseReleased(sf::Vector2i mousePos);
 
 	void setContents(std::wstring text);
 
 	bool getClicked();
+
 	int getId();
 
 	void updateGraphics();
 
 	void update(sf::Vector2i mousePos);
+
 	void draw(sf::RenderWindow& window);
 
 	static sf::Font& getFont();
 
 protected:
 	sf::Vector2f getContentsPosition();
+
 	void setImage(int image);
 
 private:

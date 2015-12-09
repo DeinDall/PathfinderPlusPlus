@@ -7,17 +7,18 @@ public:
 	static Direction validDirections[4];
 
 	Direction();
-	Direction opposite();
-	bool isValid();
+	Direction opposite() const;
+	bool isValid() const;
 
 private:
 	// constructeurs privés
-	Direction(int xo, int yo) : xOffset(xo), yOffset(yo) {}
+	Direction(int xo, int yo);
 
 public:
 	int xOffset, yOffset;
 };
 
 bool operator==(const Direction& d1, const Direction& d2);
+bool operator!=(const Direction& d1, const Direction& d2);
 
 #endif // DIRECTION_H

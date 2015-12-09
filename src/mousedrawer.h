@@ -3,8 +3,6 @@
 
 #include "map.h"
 
-#include <iostream>
-
 class MouseDrawer {
 public:
 	enum DrawMethod {
@@ -18,11 +16,13 @@ public:
 	MouseDrawer(sf::IntRect drawArea);
 
 	void onMousePress(sf::Vector2i mpos, bool erase);
+
 	void onMouseRelease(sf::Vector2i mpos, bool erase);
 
 	void setColor(const sf::Color& color);
 
 	void update(sf::Vector2i mpos, Map& map);
+
 	void draw(sf::RenderWindow& window);
 
 private:

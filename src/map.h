@@ -5,24 +5,24 @@
 
 #include <vector>
 #include <string>
-#include <fstream>
 
 class Map {
 public:
 	// Constructeur(w, h): Construit la carte avec la taille donnée.
 	Map(int w, int h);
+	~Map();
 
 	// get(x, y): Cette methode retourne la valeure de la tuile aux coordonées données (/!\: non sécurisé).
-	int get(int x, int y);
+	int get(int x, int y) const;
 
 	// set(x, y, val): Cette methode modifie la valeure de la tuile aux coordonées données (/!\: non sécurisé).
 	void set(int x, int y, bool val);
 
 	// width(): Cette methode retourne la largeur de la carte
-	int width();
+	int width() const;
 
 	// height(): Cette methode retourne la hauteur de la carte
-	int height();
+	int height() const;
 
 	void clear();
 
@@ -34,9 +34,9 @@ public:
 	// drawWallLayer(window, yLayer): Cette methode dessine une rangée de murs dans la fenêtre
 	void drawWallLayer(sf::RenderWindow& window, int yLayer);
 
-	void save(std::wstring file);
+	void save(std::string file);
 
-	void load(std::wstring file);
+	void load(std::string file);
 
 protected:
 	// init(): Cette methode initialise le tableau de données selon la taille de la carte.
