@@ -42,7 +42,7 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 		for (Node* node : remainingNodes) {
 			if (n1==nullptr)
 				n1 = node;
-			else if ((n1->stepCount)>(node->stepCount))
+			else if ((n1->stepCount + manhattan(n1->x, n1->y, end.x, end.y))>(node->stepCount + manhattan(n1->x, n1->y, end.x, end.y)))
 				n1 = node;
 		}
 
@@ -81,8 +81,6 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 	if (!n->previousDirection.isValid())
 		return;
 
-	std::cout << "here" << std::endl;
-
 	while (n != &start) {
 		reversePath.push_back(n->previousDirection);
 
@@ -94,7 +92,6 @@ void Pathfinder::computePath(Map& map, int fromX, int fromY, int toX, int toY) {
 
 	for (int i=0; i<mPath.size(); ++i) {
 		mPath[i] = reversePath[mPath.size()-(i+1)];
-		std::cout << mPath[i].xOffset << ";" << mPath[i].yOffset << std::endl;
 	}
 }
 
@@ -104,7 +101,11 @@ std::vector<Direction>& Pathfinder::path() {
 
 bool Pathfinder::tilesAreConnected(int x1, int y1, int x2, int y2) {
 	// deux tuiles sont connectées si la distance de manhattan entre ces deux tuiles est egales à 1.
-	return ((std::abs(x1-x2)+std::abs(y1-y2)) == 1);
+	return (manhattan(x1, y1, x2, y2) == 1);
+}
+
+int Pathfinder::manhattan(int x1, int y1, int x2, int y2) {
+	return std::abs(x1-x2)+std::abs(y1-y2);
 }
 
 int Pathfinder::positionToArrayIndex(int x, int y, int w) {

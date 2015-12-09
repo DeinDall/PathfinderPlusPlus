@@ -6,9 +6,8 @@
 
 #include <list>
 #include <cstdlib>
-#include <iostream>
 
-// classe calculant le chemin le plus court à l'aide de l'algorithme de Dijkstra
+// classe calculant le chemin le plus court à l'aide de l'algorithme de Dijkstra/A*
 class Pathfinder {
 	struct Node {
 		int x, y;
@@ -24,6 +23,8 @@ public:
 
 protected:
 	bool tilesAreConnected(int x1, int y1, int x2, int y2);
+
+	int manhattan(int x1, int y1, int x2, int y2);
 
 	int positionToArrayIndex(int x, int y, int w);
 

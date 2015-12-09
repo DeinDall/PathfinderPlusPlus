@@ -2,6 +2,8 @@
 #define MAP_H
 
 #include <vector>
+#include <string>
+#include <fstream>
 
 class Map {
 public:
@@ -19,6 +21,10 @@ public:
 
 	// height(): Cette methode retourne la hauteur de la carte
 	int height();
+
+	void save();
+
+	void load(std::string file);
 
 protected:
 	// init(): Cette methode initialise le tableau de données selon la taille de la carte.
