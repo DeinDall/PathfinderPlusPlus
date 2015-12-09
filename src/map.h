@@ -1,22 +1,20 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include <SFML/Graphics.hpp>
-
 #include <vector>
 #include <string>
 
 class Map {
 public:
 	// Constructeur(w, h): Construit la carte avec la taille donnée.
-	Map(int w, int h);
+	Map(unsigned int w, unsigned int h);
 	~Map();
 
 	// get(x, y): Cette methode retourne la valeure de la tuile aux coordonées données (/!\: non sécurisé).
-	int get(int x, int y) const;
+	bool get(unsigned int x, unsigned int y) const;
 
 	// set(x, y, val): Cette methode modifie la valeure de la tuile aux coordonées données (/!\: non sécurisé).
-	void set(int x, int y, bool val);
+	void set(unsigned int x, unsigned int y, bool val);
 
 	// width(): Cette methode retourne la largeur de la carte
 	int width() const;
@@ -25,14 +23,6 @@ public:
 	int height() const;
 
 	void clear();
-
-	void update();
-
-	// draw(window): Cette methode dessine le sol de la map dans la fenêtre.
-	void draw(sf::RenderWindow& window);
-
-	// drawWallLayer(window, yLayer): Cette methode dessine une rangée de murs dans la fenêtre
-	void drawWallLayer(sf::RenderWindow& window, int yLayer);
 
 	void save(std::string file);
 
@@ -43,11 +33,8 @@ protected:
 	void init();
 
 private:
-	struct tile { int drawVal; bool val; };
-	std::vector<tile> mData;
-	int mWidth, mHeight;
-
-	sf::Texture mTexture;
+	std::vector<bool> mData;
+	unsigned int mWidth, mHeight;
 };
 
 #endif // MAP_H

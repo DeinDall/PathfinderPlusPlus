@@ -2,11 +2,9 @@
 #define CONSOLE_H_INCLUDED
 
 #include <SFML/Graphics.hpp>
+
 #include <list>
-
-#include <iostream>
-
-#define CONSOLE_LINE_HEIGHT 24
+#include <memory>
 
 class Console {
 	struct ConsoleLine {
@@ -16,18 +14,20 @@ class Console {
 	};
 
 public:
-	Console(sf::Font& font);
+	Console(std::shared_ptr<const sf::Font> font);
 	~Console();
 
-	void addText(const std::string& text);
+	void addText(const sf::String& text);
 
 	void update();
 
 	void draw(sf::RenderWindow& window);
 
 private:
-	sf::Font& mFont;
+	std::shared_ptr<const sf::Font> mFont;
 	std::list<ConsoleLine*> mLines;
+
+	static const int msLineHeight;
 };
 
 #endif // CONSOLE_H_INCLUDED

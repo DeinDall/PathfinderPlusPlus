@@ -4,15 +4,19 @@
 class Direction {
 public:
 	static Direction UP, DOWN, LEFT, RIGHT;
-	static Direction validDirections[4];
+	static Direction validDirections[8];
 
 	Direction();
 	Direction opposite() const;
 	bool isValid() const;
 
+	bool isCardinal() const;
+
 private:
 	// constructeurs privés
 	Direction(int xo, int yo);
+
+	static Direction UPRIGHT, UPLEFT, DOWNLEFT, DOWNRIGHT;
 
 public:
 	int xOffset, yOffset;

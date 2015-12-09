@@ -1,7 +1,9 @@
 #include "console.h"
 
-Console::Console(sf::Font& font) : mFont(font) {
-	addText("Programme lancé");
+const int Console::msLineHeight = 24;
+
+Console::Console(std::shared_ptr<const sf::Font> font) : mFont(font) {
+	addText(L"Programme lancé");
 }
 
 Console::~Console() {
@@ -9,34 +11,35 @@ Console::~Console() {
 		delete line;
 }
 
-void Console::addText(const std::string& text) {
+void Console::addText(const sf::String& text) {
 	ConsoleLine* line = new ConsoleLine;
 
-	line->text.setFont(mFont);
+	line->text.setFont(*mFont);
 	line->text.setCharacterSize(16);
-	line->text.setString(sf::String(text));
+	line->text.setString(text);
 	line->text.setColor(sf::Color::Red);
 
 	line->timeout = 160;
-	line->y = -CONSOLE_LINE_HEIGHT;
+	line->y = -msLineHeight;
 
 	mLines.push_front(line);
 }
 
 void Console::update() {
 	int i=0;
-	std::vector<std::list<ConsoleLine*>::iterator> toDelete;
 
 	for (auto it = mLines.begin(); it != mLines.end(); ++it) {
 		ConsoleLine* line = *it;
 
-		if (line->y < i*CONSOLE_LINE_HEIGHT)
-			line->y -= ((line->y - i*CONSOLE_LINE_HEIGHT)/8)-1;
+		int goal = i*msLineHeight;
+
+		if (line->y < goal)
+			line->y += ((goal - line->y)/8)+1;
 
 		line->timeout--;
 
 		if (line->timeout==0) {
-			toDelete.push_back(it);
+			mLines.erase(it--);
 			delete line;
 		} else {
 			if (line->timeout<40)
@@ -46,9 +49,6 @@ void Console::update() {
 
 		++i;
 	}
-
-	for (auto it : toDelete)
-		mLines.erase(it);
 }
 
 void Console::draw(sf::RenderWindow& window) {
