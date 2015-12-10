@@ -39,3 +39,6 @@ endif()
 
 # Specify we want to link the standard library STATICALLY
 set(CMAKE_EXE_LINKER_FLAGS "-static")
+
+# Move the resource files
+file(COPY ./resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
