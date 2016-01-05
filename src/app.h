@@ -15,10 +15,11 @@
 #include "mousedrawer.h"
 
 class App {
-	enum CursorType {
-		MOUSEDRAW=0,
-		PLACE_START=1,
-		PLACE_END=2
+	enum GuiCursorType {
+		CurDrawFree,
+		CurDrawLines,
+		CurPlaceStart,
+		CurPlaceEnd
 	};
 public:
 	App();
@@ -32,8 +33,7 @@ private:
 
 private:
 	void computePath();
-	void changeCursor(CursorType cursor);
-	void changeDrawerMethod(MouseDrawer::DrawMethod method);
+	void changeCursor(GuiCursorType cursor);
 	void buttonToggleNodes(sfg::CheckButton::Ptr btn);
 	void clearMap();
 
@@ -49,7 +49,6 @@ private:
 	PathGraphics mPathGraphics;
 
 	MouseDrawer mMouseDrawer;
-	CursorType mCurrentCursor;
 
 	// SFML components
 	sf::RenderWindow mWindow;

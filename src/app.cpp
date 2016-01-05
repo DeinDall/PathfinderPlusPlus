@@ -5,7 +5,6 @@ App::App()
 	: mFontPath("./resources/font.ttf"),
 	  mMap(24, 18),
 	  mMouseDrawer(sf::IntRect(0, 0, 768, 576)),
-	  mCurrentCursor(MOUSEDRAW),
 	  mSfgWindow(sfg::Window::Create(sfg::Window::BACKGROUND)),
 	  mConsole(mSfgDesktop.GetEngine().GetResourceManager().GetFont(mFontPath)) {
 	initGraphics();
@@ -13,8 +12,6 @@ App::App()
 }
 
 App::~App() {}
-
-#include "graphics/components/animatedsprite.h"
 
 int App::run() {
 	sf::Event ev;
@@ -37,37 +34,13 @@ int App::run() {
 
 				if (ev.type==sf::Event::MouseButtonPressed) {
 					sf::Vector2i mpos(ev.mouseButton.x, ev.mouseButton.y);
-					if ((mCurrentCursor == MOUSEDRAW) && mapViewRect.contains(mpos)) {
-						if (ev.mouseButton.button==sf::Mouse::Right)
-							mMouseDrawer.onMousePress(mpos, true);
-						else if (ev.mouseButton.button==sf::Mouse::Left)
-							mMouseDrawer.onMousePress(mpos, false);
-					}
+					mMouseDrawer.onMousePress(ev.mouseButton.button, mpos);
 				} else if (ev.type==sf::Event::MouseButtonReleased) {
 					sf::Vector2i mpos(ev.mouseButton.x, ev.mouseButton.y);
-
-					if (mapViewRect.contains(mpos)) {
-						switch (mCurrentCursor) {
-						case MOUSEDRAW:
-							if (ev.mouseButton.button==sf::Mouse::Right)
-								mMouseDrawer.onMouseRelease(mpos, true);
-							else if (ev.mouseButton.button==sf::Mouse::Left)
-								mMouseDrawer.onMouseRelease(mpos, false);
-							break;
-						case PLACE_START:
-							mStartPos = mpos/32;
-							computePath();
-							mCurrentCursor = MOUSEDRAW;
-							break;
-						case PLACE_END:
-							mEndPos = mpos/32;
-							computePath();
-							mCurrentCursor = MOUSEDRAW;
-							break;
-						default:
-							break;
-						}
-					}
+					mMouseDrawer.onMouseRelease(ev.mouseButton.button, mpos);
+				} else if (ev.type==sf::Event::MouseMoved) {
+					sf::Vector2i mpos(ev.mouseMove.x, ev.mouseMove.y);
+					mMouseDrawer.onMouseMove(mpos);
 				}
 			}
 		}
@@ -75,24 +48,12 @@ int App::run() {
 		mSfgDesktop.Update(loopClock.restart().asSeconds());
 
 		// Ici on met à jour les éléments interractifs
-		mMouseDrawer.update(sf::Mouse::getPosition(mWindow), mMap);
+		if (!mMouseDrawer.hasCursor())
+			changeCursor(CurDrawFree);
 
 		// Ici, on met les cases du début et de la fin comme vierges, afin nottament d'éviter les anomalies graphiques.
 		mMap.set(mStartPos.x, mStartPos.y, false);
 		mMap.set(mEndPos.x, mEndPos.y, false);
-
-		// Ici, on change la couleur du cruseur sur la map, en fonction de ce que l'on place (début, fin, ou "bloc")
-		switch (mCurrentCursor) {
-		case PLACE_START:
-			mMouseDrawer.setColor(sf::Color(255, 128, 64, 128));
-			break;
-		case PLACE_END:
-			mMouseDrawer.setColor(sf::Color(64, 255, 128, 128));
-			break;
-		default:
-			mMouseDrawer.setColor(sf::Color(64, 128, 255, 128));
-			break;
-		}
 
 		mConsole.update();
 
@@ -167,11 +128,11 @@ void App::initGUI() {
 
 		auto radio = sfg::RadioButton::Create(L"Libre");
 		radio->SetActive(true);
-		radio->GetSignal(sfg::RadioButton::OnToggle).Connect(std::bind(&App::changeDrawerMethod, this, MouseDrawer::DRAW_FREE));
+		radio->GetSignal(sfg::RadioButton::OnToggle).Connect(std::bind(&App::changeCursor, this, CurDrawFree));
 		hbox->Pack(radio);
 
 		radio = sfg::RadioButton::Create(L"Lignes", radio->GetGroup());
-		radio->GetSignal(sfg::RadioButton::OnToggle).Connect(std::bind(&App::changeDrawerMethod, this, MouseDrawer::DRAW_LINES));
+		radio->GetSignal(sfg::RadioButton::OnToggle).Connect(std::bind(&App::changeCursor, this, CurDrawLines));
 		hbox->Pack(radio);
 
 		frame->Add(hbox);
@@ -181,11 +142,11 @@ void App::initGUI() {
 	box->Pack(sfg::Separator::Create(), false);
 
 	btn = sfg::Button::Create(L"Placer le début");
-	btn->GetSignal(sfg::Widget::OnLeftClick).Connect(std::bind(&App::changeCursor, this, PLACE_START));
+	btn->GetSignal(sfg::Widget::OnLeftClick).Connect(std::bind(&App::changeCursor, this, CurPlaceStart));
 	box->Pack(btn, false);
 
 	btn = sfg::Button::Create(L"Placer la fin");
-	btn->GetSignal(sfg::Widget::OnLeftClick).Connect(std::bind(&App::changeCursor, this, PLACE_END));
+	btn->GetSignal(sfg::Widget::OnLeftClick).Connect(std::bind(&App::changeCursor, this, CurPlaceEnd));
 	box->Pack(btn, false);
 
 	box->Pack(sfg::Separator::Create(), false);
@@ -204,12 +165,25 @@ void App::computePath() {
 	mPathFinder.startPathfind(new PathContext(mMap, mStartPos.x, mStartPos.y, mEndPos.x, mEndPos.y));
 }
 
-void App::changeCursor(CursorType cursor) {
-	mCurrentCursor = cursor;
-}
-
-void App::changeDrawerMethod(MouseDrawer::DrawMethod method) {
-	mMouseDrawer.setMethod(method);
+void App::changeCursor(GuiCursorType cursor) {
+	switch (cursor) {
+	case CurPlaceStart:
+		mMouseDrawer.setCursor(new SetPosCursor(mStartPos));
+		mMouseDrawer.setColor(sf::Color(255, 128, 64));
+		break;
+	case CurPlaceEnd:
+		mMouseDrawer.setCursor(new SetPosCursor(mEndPos));
+		mMouseDrawer.setColor(sf::Color(64, 255, 128));
+		break;
+	case CurDrawFree:
+		mMouseDrawer.setCursor(new DrawFreeCursor(mMap));
+		mMouseDrawer.setColor(sf::Color(64, 128, 255));
+		break;
+	case CurDrawLines:
+		mMouseDrawer.setCursor(new DrawLineCursor(mMap));
+		mMouseDrawer.setColor(sf::Color(64, 128, 255));
+		break;
+	}
 }
 
 void App::buttonToggleNodes(sfg::CheckButton::Ptr btn) {
