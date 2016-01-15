@@ -71,7 +71,6 @@ public:
 	~MouseDrawer();
 
 	void setColor(const sf::Color& color);
-	void setCursor(AbstractDrawCursor* cursor);
 
 	bool hasCursor() const;
 
@@ -80,6 +79,14 @@ public:
 	void onMouseRelease(sf::Mouse::Button button, sf::Vector2i mpos);
 
 	void draw(sf::RenderWindow& window);
+
+	template<class CurT, typename... Args>
+	void setCursor(Args&& ... args) {
+		setCursorPtr(new CurT(std::forward<Args>(args)...));
+	}
+
+protected:
+	void setCursorPtr(AbstractDrawCursor* cursor);
 
 private:
 	AbstractDrawCursor* mCursor;

@@ -72,7 +72,6 @@ void PathFinder::generatePath() {
 
 	PathContext::Node* node = endNode;
 
-
 	if (!node->previousDirection.isValid())
 		node = getWantedUncheckedNode();
 	if (node==nullptr)

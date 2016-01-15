@@ -168,19 +168,19 @@ void App::computePath() {
 void App::changeCursor(GuiCursorType cursor) {
 	switch (cursor) {
 	case CurPlaceStart:
-		mMouseDrawer.setCursor(new SetPosCursor(mStartPos));
+		mMouseDrawer.setCursor<SetPosCursor>(mStartPos);
 		mMouseDrawer.setColor(sf::Color(255, 128, 64));
 		break;
 	case CurPlaceEnd:
-		mMouseDrawer.setCursor(new SetPosCursor(mEndPos));
+		mMouseDrawer.setCursor<SetPosCursor>(mEndPos);
 		mMouseDrawer.setColor(sf::Color(64, 255, 128));
 		break;
 	case CurDrawFree:
-		mMouseDrawer.setCursor(new DrawFreeCursor(mMap));
+		mMouseDrawer.setCursor<DrawFreeCursor>(mMap);
 		mMouseDrawer.setColor(sf::Color(64, 128, 255));
 		break;
 	case CurDrawLines:
-		mMouseDrawer.setCursor(new DrawLineCursor(mMap));
+		mMouseDrawer.setCursor<DrawLineCursor>(mMap);
 		mMouseDrawer.setColor(sf::Color(64, 128, 255));
 		break;
 	}

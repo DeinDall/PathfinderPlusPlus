@@ -89,7 +89,7 @@ void MouseDrawer::setColor(const sf::Color& color) {
 	mColor = color;
 }
 
-void MouseDrawer::setCursor(AbstractDrawCursor* cursor) {
+void MouseDrawer::setCursorPtr(AbstractDrawCursor* cursor) {
 	if (mCursor)
 		delete mCursor;
 	mCursor = cursor;
@@ -103,7 +103,7 @@ void MouseDrawer::onMousePress(sf::Mouse::Button button, sf::Vector2i mpos) {
 	if (mCursor && mDrawArea.contains(mpos)) {
 		mCursor->onMousePress(button, mpos);
 		if (!mCursor->isActive())
-			setCursor(nullptr);
+			setCursorPtr(nullptr);
 	}
 }
 
@@ -111,7 +111,7 @@ void MouseDrawer::onMouseMove(sf::Vector2i mpos) {
 	if (mCursor && mDrawArea.contains(mpos)) {
 		mCursor->onMouseMove(mpos);
 		if (!mCursor->isActive())
-			setCursor(nullptr);
+			setCursorPtr(nullptr);
 
 		mLastPos = mpos/32;
 	}
@@ -121,7 +121,7 @@ void MouseDrawer::onMouseRelease(sf::Mouse::Button button, sf::Vector2i mpos) {
 	if (mCursor && mDrawArea.contains(mpos)) {
 		mCursor->onMouseRelease(button, mpos);
 		if (!mCursor->isActive())
-			setCursor(nullptr);
+			setCursorPtr(nullptr);
 	}
 }
 
