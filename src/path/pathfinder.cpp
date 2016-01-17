@@ -60,7 +60,7 @@ bool PathFinder::canContinue() const {
 }
 
 void PathFinder::forwardPathfind() {
-	checkNode(getWantedUncheckedNode());
+	checkNode(getNextUncheckedNode());
 }
 
 void PathFinder::generatePath() {
@@ -78,7 +78,7 @@ void PathFinder::generatePath() {
 	// If we didn't find the end node, we will build the path from the
 	// next node to check.
 	if (!node->previousDirection.isValid())
-		node = getWantedUncheckedNode();
+		node = getNextUncheckedNode();
 
 	if (!node)
 		node = startNode;
@@ -99,33 +99,28 @@ void PathFinder::generatePath() {
 										 mContext->distancePredict(mPathEndNode, endNode);
 }
 
-PathContext::Node* PathFinder::getWantedUncheckedNode() {
+PathContext::Node* PathFinder::getWantedNode(PathContext::Node* one, PathContext::Node* two) {
 	// This is the only thing that changes between A* and Dijkstra.
-	return (mUseAStar ? getBestUncheckedNode() : getCloserUncheckedNode());
+	if (mUseAStar) {
+		PathContext::Node* endNode = mContext->getEnd();
+		if ((one->stepCount+mContext->distancePredict(one, endNode)) < (two->stepCount+mContext->distancePredict(two, endNode)))
+			return one;
+		return two;
+	} else {
+		if (one->stepCount < two->stepCount)
+			return one;
+		return two;
+	}
 }
 
-PathContext::Node* PathFinder::getCloserUncheckedNode() {
+PathContext::Node* PathFinder::getNextUncheckedNode() {
 	PathContext::Node* curNode = nullptr;
 
 	for (PathContext::Node* node : mUncheckedNodes) {
 		if (!curNode)
 			curNode = node;
-		else if (node->stepCount < curNode->stepCount)
-			curNode = node;
-	}
-
-	return curNode;
-}
-
-PathContext::Node* PathFinder::getBestUncheckedNode() {
-	PathContext::Node* curNode = nullptr;
-	PathContext::Node* endNode = mContext->getEnd();
-
-	for (PathContext::Node* node : mUncheckedNodes) {
-		if (curNode==nullptr)
-			curNode = node;
-		else if ((node->stepCount+mContext->distancePredict(node, endNode)) < (curNode->stepCount+mContext->distancePredict(curNode, endNode)))
-			curNode = node;
+		else
+			curNode = getWantedNode(node, curNode);
 	}
 
 	return curNode;

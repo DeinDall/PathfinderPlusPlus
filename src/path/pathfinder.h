@@ -28,9 +28,8 @@ public:
 	void generatePath();
 
 protected:
-	PathContext::Node* getWantedUncheckedNode();
-	PathContext::Node* getCloserUncheckedNode();
-	PathContext::Node* getBestUncheckedNode();
+	PathContext::Node* getWantedNode(PathContext::Node* one, PathContext::Node* two);
+	PathContext::Node* getNextUncheckedNode();
 	void checkNode(PathContext::Node* node);
 
 private:
