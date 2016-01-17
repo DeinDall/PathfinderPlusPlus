@@ -13,7 +13,7 @@ public:
 	bool isCardinal() const;
 
 private:
-	// constructeurs privés
+	// Private constructor.
 	Direction(int xo, int yo);
 
 	static Direction UPRIGHT, UPLEFT, DOWNLEFT, DOWNRIGHT;

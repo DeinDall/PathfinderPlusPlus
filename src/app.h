@@ -38,7 +38,8 @@ private:
 	void clearMap();
 
 private:
-	std::string mFontPath;
+	const std::string mFontPath;
+
 	// Logic components
 	Map mMap;
 	MapGraphics mMapGraphics;

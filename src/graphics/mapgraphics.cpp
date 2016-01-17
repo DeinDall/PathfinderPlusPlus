@@ -67,18 +67,18 @@ void MapGraphics::initRenderTexture() {
 
 		spr.setColor(sf::Color::White);
 
-		// On dessine la partie latérale du mur
+		// We draw the front part of the wall.
 		spr.setTextureRect(sf::IntRect(64, 0, 32, i+1));
 		spr.setPosition((i+1)*32, 64+yOffset);
 		mRenderTexture.draw(spr);
 
 		spr.setPosition((i+1)*32, 32+yOffset);
 
-		// on dessine un sol sur le mur
+		// We draw a ground on top of the wall.
 		spr.setTextureRect(texRectGround);
 		mRenderTexture.draw(spr);
 
-		// on dessine le sol plus sombre
+		// We redraw a darker groud on top of it.
 		spr.setTextureRect(texRectWall);
 		spr.setColor(color);
 		mRenderTexture.draw(spr);

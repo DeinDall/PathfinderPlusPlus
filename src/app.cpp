@@ -25,7 +25,7 @@ int App::run() {
 	computePath();
 
 	while (mWindow.isOpen()) {
-		// Ici, on commence à parcourir les évènements envoyés par la fenêtre
+		// Here, we start to iterate through the events sent by the window.
 		while (mWindow.pollEvent(ev)) {
 			if (ev.type==sf::Event::Closed)
 				mWindow.close();
@@ -47,11 +47,11 @@ int App::run() {
 
 		mSfgDesktop.Update(loopClock.restart().asSeconds());
 
-		// Ici on met à jour les éléments interractifs
+		// Here, we update interactive components.
 		if (!mDrawCursor.hasState())
 			changeCursor(CurDrawFree);
 
-		// Ici, on met les cases du début et de la fin comme vierges, afin nottament d'éviter les anomalies graphiques.
+		// Here, we are setting the start & end positions as empty to avoid inconsistencies.
 		mMap.set(mStartPos.x, mStartPos.y, false);
 		mMap.set(mEndPos.x, mEndPos.y, false);
 
@@ -65,10 +65,10 @@ int App::run() {
 
 		mMapGraphics.update(mMap);
 
-		// Le dessin commence ici.
+		// Actual drawing starts here.
 		mWindow.clear();
 
-		{ // C'est ici que l'on dessine les éléments par lignes
+		{ // Here, we are drawing "map elements" line by line (to create a depth effect).
 			sf::RectangleShape rect(sf::Vector2f(28, 28));
 
 			for (int i=0; i<mMap.height(); ++i) {

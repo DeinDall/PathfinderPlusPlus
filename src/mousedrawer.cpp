@@ -126,7 +126,7 @@ void DrawCursor::onMouseRelease(sf::Mouse::Button button, sf::Vector2i mpos) {
 }
 
 void DrawCursor::draw(sf::RenderWindow &window) {
-	sf::RectangleShape shape(sf::Vector2f(32, 32));
+	static sf::RectangleShape shape(sf::Vector2f(32, 32));
 	shape.setPosition(mLastPos.x*32, mLastPos.y*32);
 	shape.setFillColor(sf::Color::Transparent);
 	shape.setOutlineThickness(1);
