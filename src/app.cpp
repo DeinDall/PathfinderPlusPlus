@@ -4,7 +4,7 @@
 App::App()
 	: mFontPath("./resources/font.ttf"),
 	  mMap(24, 18),
-	  mMouseDrawer(sf::IntRect(0, 0, 768, 576)),
+	  mDrawCursor(sf::IntRect(0, 0, 768, 576)),
 	  mSfgWindow(sfg::Window::Create(sfg::Window::BACKGROUND)),
 	  mConsole(mSfgDesktop.GetEngine().GetResourceManager().GetFont(mFontPath)) {
 	initGraphics();
@@ -34,13 +34,13 @@ int App::run() {
 
 				if (ev.type==sf::Event::MouseButtonPressed) {
 					sf::Vector2i mpos(ev.mouseButton.x, ev.mouseButton.y);
-					mMouseDrawer.onMousePress(ev.mouseButton.button, mpos);
+					mDrawCursor.onMousePress(ev.mouseButton.button, mpos);
 				} else if (ev.type==sf::Event::MouseButtonReleased) {
 					sf::Vector2i mpos(ev.mouseButton.x, ev.mouseButton.y);
-					mMouseDrawer.onMouseRelease(ev.mouseButton.button, mpos);
+					mDrawCursor.onMouseRelease(ev.mouseButton.button, mpos);
 				} else if (ev.type==sf::Event::MouseMoved) {
 					sf::Vector2i mpos(ev.mouseMove.x, ev.mouseMove.y);
-					mMouseDrawer.onMouseMove(mpos);
+					mDrawCursor.onMouseMove(mpos);
 				}
 			}
 		}
@@ -48,7 +48,7 @@ int App::run() {
 		mSfgDesktop.Update(loopClock.restart().asSeconds());
 
 		// Ici on met à jour les éléments interractifs
-		if (!mMouseDrawer.hasCursor())
+		if (!mDrawCursor.hasState())
 			changeCursor(CurDrawFree);
 
 		// Ici, on met les cases du début et de la fin comme vierges, afin nottament d'éviter les anomalies graphiques.
@@ -88,7 +88,7 @@ int App::run() {
 		}
 
 		mPathGraphics.draw(mWindow, mPathFinder.getContext());
-		mMouseDrawer.draw(mWindow);
+		mDrawCursor.draw(mWindow);
 
 		mConsole.draw(mWindow);
 		mSFGUI.Display(mWindow);
@@ -168,20 +168,20 @@ void App::computePath() {
 void App::changeCursor(GuiCursorType cursor) {
 	switch (cursor) {
 	case CurPlaceStart:
-		mMouseDrawer.setCursor<SetPosCursor>(mStartPos);
-		mMouseDrawer.setColor(sf::Color(255, 128, 64));
+		mDrawCursor.setCursorState<SetPosCursor>(mStartPos);
+		mDrawCursor.setColor(sf::Color(255, 128, 64));
 		break;
 	case CurPlaceEnd:
-		mMouseDrawer.setCursor<SetPosCursor>(mEndPos);
-		mMouseDrawer.setColor(sf::Color(64, 255, 128));
+		mDrawCursor.setCursorState<SetPosCursor>(mEndPos);
+		mDrawCursor.setColor(sf::Color(64, 255, 128));
 		break;
 	case CurDrawFree:
-		mMouseDrawer.setCursor<DrawFreeCursor>(mMap);
-		mMouseDrawer.setColor(sf::Color(64, 128, 255));
+		mDrawCursor.setCursorState<DrawFreeCursor>(mMap);
+		mDrawCursor.setColor(sf::Color(64, 128, 255));
 		break;
 	case CurDrawLines:
-		mMouseDrawer.setCursor<DrawLineCursor>(mMap);
-		mMouseDrawer.setColor(sf::Color(64, 128, 255));
+		mDrawCursor.setCursorState<DrawLineCursor>(mMap);
+		mDrawCursor.setColor(sf::Color(64, 128, 255));
 		break;
 	}
 }

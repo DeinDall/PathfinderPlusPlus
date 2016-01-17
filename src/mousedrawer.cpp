@@ -1,6 +1,6 @@
 #include "mousedrawer.h"
 
-AbstractDrawCursor::~AbstractDrawCursor() {}
+AbstractCursorState::~AbstractCursorState() {}
 
 SetPosCursor::SetPosCursor(sf::Vector2i& target)
 	: mTarget(target), mDone(false) {}
@@ -75,57 +75,57 @@ bool DrawLineCursor::isActive() const {
 
 // -------
 
-MouseDrawer::MouseDrawer(sf::IntRect drawArea)
+DrawCursor::DrawCursor(sf::IntRect drawArea)
 	: mDrawArea(drawArea) {
-	mCursor = nullptr;
+	mState = nullptr;
 }
 
-MouseDrawer::~MouseDrawer() {
-	if (mCursor)
-		delete mCursor;
+DrawCursor::~DrawCursor() {
+	if (mState)
+		delete mState;
 }
 
-void MouseDrawer::setColor(const sf::Color& color) {
+void DrawCursor::setColor(const sf::Color& color) {
 	mColor = color;
 }
 
-void MouseDrawer::setCursorPtr(AbstractDrawCursor* cursor) {
-	if (mCursor)
-		delete mCursor;
-	mCursor = cursor;
+void DrawCursor::setStatePtr(AbstractCursorState* cursor) {
+	if (mState)
+		delete mState;
+	mState = cursor;
 }
 
-bool MouseDrawer::hasCursor() const {
-	return (mCursor!=nullptr);
+bool DrawCursor::hasState() const {
+	return (mState!=nullptr);
 }
 
-void MouseDrawer::onMousePress(sf::Mouse::Button button, sf::Vector2i mpos) {
-	if (mCursor && mDrawArea.contains(mpos)) {
-		mCursor->onMousePress(button, mpos);
-		if (!mCursor->isActive())
-			setCursorPtr(nullptr);
+void DrawCursor::onMousePress(sf::Mouse::Button button, sf::Vector2i mpos) {
+	if (mState && mDrawArea.contains(mpos)) {
+		mState->onMousePress(button, mpos);
+		if (!mState->isActive())
+			setStatePtr(nullptr);
 	}
 }
 
-void MouseDrawer::onMouseMove(sf::Vector2i mpos) {
-	if (mCursor && mDrawArea.contains(mpos)) {
-		mCursor->onMouseMove(mpos);
-		if (!mCursor->isActive())
-			setCursorPtr(nullptr);
+void DrawCursor::onMouseMove(sf::Vector2i mpos) {
+	if (mState && mDrawArea.contains(mpos)) {
+		mState->onMouseMove(mpos);
+		if (!mState->isActive())
+			setStatePtr(nullptr);
 
 		mLastPos = mpos/32;
 	}
 }
 
-void MouseDrawer::onMouseRelease(sf::Mouse::Button button, sf::Vector2i mpos) {
-	if (mCursor && mDrawArea.contains(mpos)) {
-		mCursor->onMouseRelease(button, mpos);
-		if (!mCursor->isActive())
-			setCursorPtr(nullptr);
+void DrawCursor::onMouseRelease(sf::Mouse::Button button, sf::Vector2i mpos) {
+	if (mState && mDrawArea.contains(mpos)) {
+		mState->onMouseRelease(button, mpos);
+		if (!mState->isActive())
+			setStatePtr(nullptr);
 	}
 }
 
-void MouseDrawer::draw(sf::RenderWindow &window) {
+void DrawCursor::draw(sf::RenderWindow &window) {
 	sf::RectangleShape shape(sf::Vector2f(32, 32));
 	shape.setPosition(mLastPos.x*32, mLastPos.y*32);
 	shape.setFillColor(sf::Color::Transparent);

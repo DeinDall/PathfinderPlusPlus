@@ -6,9 +6,9 @@
 
 std::vector<sf::Vector2i> genLineBetween(sf::Vector2i start, sf::Vector2i end);
 
-class AbstractDrawCursor {
+class AbstractCursorState {
 public:
-	virtual ~AbstractDrawCursor();
+	virtual ~AbstractCursorState();
 
 	virtual void onMousePress(sf::Mouse::Button button, sf::Vector2i mpos) = 0;
 	virtual void onMouseMove(sf::Vector2i mpos) = 0;
@@ -18,7 +18,7 @@ public:
 	virtual bool isActive() const = 0;
 };
 
-class SetPosCursor : public AbstractDrawCursor {
+class SetPosCursor : public AbstractCursorState {
 public:
 	SetPosCursor(sf::Vector2i& target);
 
@@ -33,7 +33,7 @@ private:
 	bool mDone;
 };
 
-class DrawFreeCursor : public AbstractDrawCursor {
+class DrawFreeCursor : public AbstractCursorState {
 public:
 	DrawFreeCursor(Map& target);
 
@@ -49,7 +49,7 @@ private:
 	bool mDrawing, mErase;
 };
 
-class DrawLineCursor : public AbstractDrawCursor {
+class DrawLineCursor : public AbstractCursorState {
 public:
 	DrawLineCursor(Map& target);
 
@@ -65,14 +65,14 @@ private:
 	bool mDrawing, mErase;
 };
 
-class MouseDrawer {
+class DrawCursor {
 public:
-	MouseDrawer(sf::IntRect drawArea);
-	~MouseDrawer();
+	DrawCursor(sf::IntRect drawArea);
+	~DrawCursor();
 
 	void setColor(const sf::Color& color);
 
-	bool hasCursor() const;
+	bool hasState() const;
 
 	void onMousePress(sf::Mouse::Button button, sf::Vector2i mpos);
 	void onMouseMove(sf::Vector2i mpos);
@@ -81,15 +81,15 @@ public:
 	void draw(sf::RenderWindow& window);
 
 	template<class CurT, typename... Args>
-	void setCursor(Args&& ... args) {
-		setCursorPtr(new CurT(std::forward<Args>(args)...));
+	void setCursorState(Args&& ... args) {
+		setStatePtr(new CurT(std::forward<Args>(args)...));
 	}
 
 protected:
-	void setCursorPtr(AbstractDrawCursor* cursor);
+	void setStatePtr(AbstractCursorState* cursor);
 
 private:
-	AbstractDrawCursor* mCursor;
+	AbstractCursorState* mState;
 
 	sf::IntRect mDrawArea;
 	sf::Color mColor;

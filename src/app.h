@@ -48,7 +48,7 @@ private:
 	PathFinder mPathFinder;
 	PathGraphics mPathGraphics;
 
-	MouseDrawer mMouseDrawer;
+	DrawCursor mDrawCursor;
 
 	// SFML components
 	sf::RenderWindow mWindow;
