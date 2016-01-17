@@ -2,7 +2,7 @@ project(PathfinderPlusPlus)
 cmake_minimum_required(VERSION 3.1)
 
 # Notifying CMake where to search for additional modules
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/modules/")
 
 # Requesting C++11
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
